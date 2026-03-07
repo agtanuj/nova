@@ -428,6 +428,7 @@
     background: #000; color: #fff; padding: 3px 7px; border-radius: 5px;
     font-size: 0.7rem; white-space: nowrap; pointer-events: none; z-index: 99;
   }
+
 </style>
   <!-- KaTeX for beautiful math rendering -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
@@ -1269,6 +1270,8 @@ function getTypingDelay(text) {
   return Math.min(Math.max(text.length * 18, 800), 2500);
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ── PASTE & SYMBOL PREPROCESSOR ──────────────────────────────────────────────
 // Handles copy-paste from textbooks, Google, Word, Khan Academy, Wolfram, etc.
 // Covers: Unicode math symbols, superscripts, subscripts, arrows, all variants
@@ -1574,7 +1577,9 @@ MATH FORMATTING - VERY IMPORTANT:
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
         max_tokens: 900,
@@ -1583,11 +1588,24 @@ MATH FORMATTING - VERY IMPORTANT:
       })
     });
     const data = await response.json();
+    if (!response.ok) {
+      const errMsg = data?.error?.message || response.statusText;
+      if (response.status === 401) return "❌ Invalid API key! Please refresh the page and enter a valid key starting with <strong>sk-ant-</strong>";
+      if (response.status === 429) return "⏳ Too many requests! Wait a moment and try again 😊";
+      return `❌ API Error (${response.status}): ${errMsg}`;
+    }
     const reply = data.content.map(b => b.text || "").join("\n").trim();
     conversationHistory.push({ role: "assistant", content: reply });
     return reply;
   } catch (err) {
-    return "Oops! My brain had a little glitch there! Give me a second and try again.";
+    console.error('Nova API error:', err);
+    if (err.message && err.message.includes('401')) {
+      return "❌ Your API key looks wrong! Go back and double-check it — it should start with <strong>sk-ant-</strong>";
+    }
+    if (err.message && err.message.includes('429')) {
+      return "⏳ Whoa, we're going too fast! Take a breather and try again in a moment 😅";
+    }
+    return "❌ Oops! Couldn't connect to Nova's brain. Check your internet connection and try again!";
   }
 }
 
@@ -1679,7 +1697,7 @@ document.getElementById('chat-input').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') sendMessage();
 });
 
-window.addEventListener('load', async () => {
+async function initNova() {
   await new Promise(r => setTimeout(r, 600));
   showTyping();
   await new Promise(r => setTimeout(r, 1500));
@@ -1689,6 +1707,9 @@ window.addEventListener('load', async () => {
   await new Promise(r => setTimeout(r, 1600));
   removeTyping();
   await addMessage('nova', "Use the <strong>🔬 symbol keyboard</strong> below to insert math signs — or just type them! I'll guide you through every step. What problem are we working on today? 🧠✨");
+}
+window.addEventListener('load', () => {
+  initNova();
 });
 </script>
 </body>
