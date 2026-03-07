@@ -1574,41 +1574,43 @@ MATH FORMATTING - VERY IMPORTANT:
 - Example: NEVER write "sqrt(x^2+8)", ALWAYS write \(\sqrt{x^2+8}\)
 - When a student pastes a LaTeX problem like \(xy=\sqrt[3]{...}\), display it back beautifully rendered`;
 
-  // Get API key from prompt if not stored
   const apiKey = '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';
+  const payload = {
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 900,
+    system: systemPrompt,
+    messages: conversationHistory
+  };
 
-  try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-request-check": "true"
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 900,
-        system: systemPrompt,
-        messages: conversationHistory
-      })
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      const errMsg = data?.error?.message || response.statusText;
-      if (response.status === 401) {
-        return "❌ Invalid API key! Please refresh the page.";
+  // Try direct first, fall back to CORS proxies
+  const endpoints = [
+    { url: "https://api.anthropic.com/v1/messages", headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01", "anthropic-dangerous-request-check": "true" } },
+    { url: "https://corsproxy.io/?https://api.anthropic.com/v1/messages", headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01", "anthropic-dangerous-request-check": "true" } },
+    { url: "https://api.allorigins.win/raw?url=" + encodeURIComponent("https://api.anthropic.com/v1/messages"), headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" } }
+  ];
+
+  for (const endpoint of endpoints) {
+    try {
+      const response = await fetch(endpoint.url, {
+        method: "POST",
+        headers: endpoint.headers,
+        body: JSON.stringify(payload)
+      });
+      const data = await response.json();
+      if (response.status === 429) return "⏳ Slow down a little! Wait a moment and try again 😊";
+      if (response.status === 401) return "⚠️ API key issue — please check the key is correct.";
+      if (!response.ok) continue; // try next proxy
+      if (data.content) {
+        const reply = data.content.map(b => b.text || "").join("\n").trim();
+        conversationHistory.push({ role: "assistant", content: reply });
+        return reply;
       }
-      if (response.status === 429) return "⏳ Too many requests! Wait a moment and try again 😊";
-      return "❌ API Error " + response.status + ": " + errMsg;
+    } catch (err) {
+      console.warn("Endpoint failed, trying next...", endpoint.url, err.message);
+      continue;
     }
-    const reply = data.content.map(b => b.text || "").join("\n").trim();
-    conversationHistory.push({ role: "assistant", content: reply });
-    return reply;
-  } catch (err) {
-    console.error('Nova API error:', err);
-    return "❌ Connection failed! Check your internet and try again.";
   }
+  return "⚠️ Nova couldn't connect right now. Check your internet connection and try again in a moment!";
 }
 
 async function sendMessage() {
