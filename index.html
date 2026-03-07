@@ -1,0 +1,1695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nova — Your Math Tutor BFF</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --pink: #FF6B9D;
+    --purple: #9B59B6;
+    --blue: #4ECDC4;
+    --yellow: #FFE66D;
+    --orange: #FF8C42;
+    --green: #6BCB77;
+    --dark: #1a1a2e;
+    --darker: #16213e;
+    --card: #0f3460;
+    --white: #f0f4ff;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--dark);
+    color: var(--white);
+    overflow-x: hidden;
+  }
+
+  /* FLOATING BLOBS */
+  .blob {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.15;
+    pointer-events: none;
+    z-index: 0;
+    animation: floatBlob 8s ease-in-out infinite;
+  }
+  .blob1 { width: 400px; height: 400px; background: var(--pink); top: -100px; left: -100px; animation-delay: 0s; }
+  .blob2 { width: 350px; height: 350px; background: var(--blue); bottom: 100px; right: -50px; animation-delay: 2s; }
+  .blob3 { width: 300px; height: 300px; background: var(--yellow); top: 50%; left: 50%; animation-delay: 4s; }
+  @keyframes floatBlob {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -20px) scale(1.05); }
+    66% { transform: translate(-20px, 30px) scale(0.95); }
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 16px 40px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(26,26,46,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  .logo { font-family: 'Fredoka One', cursive; font-size: 2rem; }
+  .logo span:nth-child(1) { color: var(--pink); }
+  .logo span:nth-child(2) { color: var(--yellow); }
+  .logo span:nth-child(3) { color: var(--blue); }
+  .logo span:nth-child(4) { color: var(--green); }
+  nav a {
+    color: rgba(240,244,255,0.75);
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-left: 28px;
+    transition: color 0.2s;
+  }
+  nav a:hover { color: var(--yellow); }
+  .nav-btn {
+    background: linear-gradient(135deg, var(--pink), var(--purple));
+    color: white !important;
+    padding: 8px 20px;
+    border-radius: 50px;
+    margin-left: 20px !important;
+    transition: transform 0.2s, box-shadow 0.2s !important;
+  }
+  .nav-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(255,107,157,0.4) !important; color: white !important; }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 100px 40px 60px;
+    position: relative; z-index: 1;
+    text-align: center;
+  }
+  .hero-inner { max-width: 800px; }
+  .hero-badge {
+    display: inline-block;
+    background: rgba(255,230,109,0.15);
+    border: 1px solid rgba(255,230,109,0.4);
+    color: var(--yellow);
+    padding: 6px 18px;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    animation: fadeUp 0.6s ease both;
+  }
+  .hero h1 {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(3rem, 7vw, 5.5rem);
+    line-height: 1.1;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+  .hero h1 .grad1 { background: linear-gradient(135deg, var(--pink), var(--orange)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero h1 .grad2 { background: linear-gradient(135deg, var(--blue), var(--green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero p {
+    font-size: 1.2rem;
+    color: rgba(240,244,255,0.75);
+    margin: 20px 0 36px;
+    line-height: 1.7;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+  .hero-btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; animation: fadeUp 0.6s 0.3s ease both; }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--pink), var(--purple));
+    color: white; border: none; padding: 14px 36px;
+    border-radius: 50px; font-size: 1.05rem; font-weight: 800;
+    cursor: pointer; font-family: 'Nunito', sans-serif;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 8px 30px rgba(255,107,157,0.35);
+  }
+  .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 14px 40px rgba(255,107,157,0.5); }
+  .btn-secondary {
+    background: transparent;
+    color: var(--white); border: 2px solid rgba(255,255,255,0.25);
+    padding: 14px 36px; border-radius: 50px;
+    font-size: 1.05rem; font-weight: 800; cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--blue); background: rgba(78,205,196,0.1); }
+
+  /* BOUNCING MATH SYMBOLS */
+  .math-symbols {
+    position: absolute; width: 100%; height: 100%;
+    top: 0; left: 0; overflow: hidden; pointer-events: none;
+  }
+  .sym {
+    position: absolute;
+    font-family: 'Fredoka One', cursive;
+    font-size: 2rem;
+    opacity: 0.12;
+    animation: floatSym 6s ease-in-out infinite;
+  }
+  .sym:nth-child(1) { color: var(--pink); top: 15%; left: 5%; animation-delay: 0s; }
+  .sym:nth-child(2) { color: var(--yellow); top: 25%; right: 8%; animation-delay: 1s; }
+  .sym:nth-child(3) { color: var(--blue); bottom: 30%; left: 10%; animation-delay: 2s; }
+  .sym:nth-child(4) { color: var(--green); bottom: 20%; right: 12%; animation-delay: 0.5s; }
+  .sym:nth-child(5) { color: var(--orange); top: 60%; left: 3%; animation-delay: 3s; }
+  .sym:nth-child(6) { color: var(--purple); top: 40%; right: 4%; animation-delay: 1.5s; }
+  @keyframes floatSym {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-25px) rotate(10deg); }
+  }
+
+  /* FEATURES */
+  #features {
+    padding: 100px 40px;
+    position: relative; z-index: 1;
+  }
+  .section-title {
+    text-align: center;
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(2rem, 4vw, 3rem);
+    margin-bottom: 16px;
+  }
+  .section-sub {
+    text-align: center;
+    color: rgba(240,244,255,0.6);
+    font-size: 1.1rem;
+    margin-bottom: 60px;
+  }
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .feat-card {
+    background: var(--card);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 20px;
+    padding: 32px 28px;
+    transition: transform 0.3s, box-shadow 0.3s;
+    position: relative; overflow: hidden;
+  }
+  .feat-card::before {
+    content: ''; position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+  }
+  .feat-card:nth-child(1)::before { background: linear-gradient(90deg, var(--pink), var(--orange)); }
+  .feat-card:nth-child(2)::before { background: linear-gradient(90deg, var(--blue), var(--green)); }
+  .feat-card:nth-child(3)::before { background: linear-gradient(90deg, var(--yellow), var(--orange)); }
+  .feat-card:nth-child(4)::before { background: linear-gradient(90deg, var(--purple), var(--pink)); }
+  .feat-card:nth-child(5)::before { background: linear-gradient(90deg, var(--green), var(--blue)); }
+  .feat-card:nth-child(6)::before { background: linear-gradient(90deg, var(--orange), var(--yellow)); }
+  .feat-card:hover { transform: translateY(-6px); box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+  .feat-icon { font-size: 2.5rem; margin-bottom: 16px; }
+  .feat-card h3 { font-size: 1.15rem; font-weight: 800; margin-bottom: 10px; }
+  .feat-card p { color: rgba(240,244,255,0.65); font-size: 0.95rem; line-height: 1.6; }
+
+  /* TOPICS SECTION */
+  #topics {
+    padding: 80px 40px;
+    position: relative; z-index: 1;
+    background: rgba(15,52,96,0.3);
+  }
+  .topics-grid {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    justify-content: center;
+    max-width: 900px; margin: 0 auto;
+  }
+  .topic-pill {
+    padding: 10px 22px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    transition: transform 0.2s;
+  }
+  .topic-pill:hover { transform: scale(1.05); }
+  .tp1 { background: rgba(255,107,157,0.2); border: 1px solid var(--pink); color: var(--pink); }
+  .tp2 { background: rgba(78,205,196,0.2); border: 1px solid var(--blue); color: var(--blue); }
+  .tp3 { background: rgba(255,230,109,0.2); border: 1px solid var(--yellow); color: var(--yellow); }
+  .tp4 { background: rgba(107,203,119,0.2); border: 1px solid var(--green); color: var(--green); }
+  .tp5 { background: rgba(255,140,66,0.2); border: 1px solid var(--orange); color: var(--orange); }
+  .tp6 { background: rgba(155,89,182,0.2); border: 1px solid var(--purple); color: var(--purple); }
+
+  /* CHATBOT SECTION */
+  #chat {
+    padding: 100px 40px;
+    position: relative; z-index: 1;
+  }
+  .chat-wrapper {
+    max-width: 820px;
+    margin: 0 auto;
+    background: var(--darker);
+    border-radius: 28px;
+    overflow: hidden;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.07);
+  }
+  .chat-header {
+    background: linear-gradient(135deg, #9B59B6, #4ECDC4);
+    padding: 20px 28px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .nova-avatar {
+    width: 50px; height: 50px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem;
+    position: relative;
+  }
+  .nova-avatar::after {
+    content: '';
+    position: absolute; bottom: 2px; right: 2px;
+    width: 12px; height: 12px;
+    background: var(--green);
+    border-radius: 50%;
+    border: 2px solid var(--darker);
+  }
+  .chat-header-info h3 { font-weight: 800; font-size: 1.1rem; }
+  .chat-header-info p { font-size: 0.8rem; opacity: 0.85; }
+  .chat-messages {
+    height: 420px;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex; flex-direction: column; gap: 16px;
+    background: var(--darker);
+    scroll-behavior: smooth;
+  }
+  .chat-messages::-webkit-scrollbar { width: 5px; }
+  .chat-messages::-webkit-scrollbar-track { background: transparent; }
+  .chat-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
+  .msg { display: flex; gap: 10px; align-items: flex-end; max-width: 80%; animation: msgIn 0.35s cubic-bezier(.34,1.56,.64,1) both; }
+  @keyframes msgIn { from { opacity: 0; transform: translateY(12px) scale(0.95); } to { opacity: 1; transform: none; } }
+  .msg.user { flex-direction: row-reverse; align-self: flex-end; }
+  .msg-avatar { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+  .msg.nova .msg-avatar { background: linear-gradient(135deg, var(--purple), var(--blue)); }
+  .msg.user .msg-avatar { background: linear-gradient(135deg, var(--pink), var(--orange)); }
+  .msg-bubble {
+    padding: 12px 18px;
+    border-radius: 18px;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    max-width: 100%;
+    word-break: break-word;
+  }
+  .msg.nova .msg-bubble {
+    background: var(--card);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-bottom-left-radius: 4px;
+    color: var(--white);
+  }
+  .msg.user .msg-bubble {
+    background: linear-gradient(135deg, var(--pink), #c45c88);
+    color: white;
+    border-bottom-right-radius: 4px;
+  }
+  .typing-indicator {
+    display: flex; gap: 5px; align-items: center;
+    padding: 12px 18px;
+    background: var(--card);
+    border-radius: 18px;
+    border-bottom-left-radius: 4px;
+    width: fit-content;
+  }
+  .dot { width: 8px; height: 8px; background: rgba(255,255,255,0.4); border-radius: 50%; animation: bounce 1.2s infinite; }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce { 0%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-8px); } }
+  .chat-input-area {
+    padding: 16px 20px;
+    background: var(--card);
+    border-top: 1px solid rgba(255,255,255,0.07);
+    display: flex; gap: 12px; align-items: center;
+  }
+  #chat-input {
+    flex: 1;
+    background: var(--darker);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 50px;
+    padding: 12px 20px;
+    color: var(--white);
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  #chat-input:focus { border-color: var(--purple); }
+  #chat-input::placeholder { color: rgba(240,244,255,0.35); }
+  #send-btn {
+    width: 46px; height: 46px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--purple), var(--blue));
+    border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+    flex-shrink: 0;
+  }
+  #send-btn:hover { transform: scale(1.1); box-shadow: 0 6px 20px rgba(78,205,196,0.4); }
+  .quick-replies {
+    padding: 12px 20px 0;
+    background: var(--card);
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .qr {
+    background: rgba(78,205,196,0.15);
+    border: 1px solid rgba(78,205,196,0.3);
+    color: var(--blue);
+    padding: 6px 14px;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    transition: background 0.2s;
+  }
+  .qr:hover { background: rgba(78,205,196,0.3); }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 50px 40px;
+    color: rgba(240,244,255,0.4);
+    font-size: 0.9rem;
+    position: relative; z-index: 1;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  footer span { color: var(--pink); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* MATH DISPLAY */
+  .math-block {
+    background: rgba(255,255,255,0.07);
+    border-left: 3px solid var(--blue);
+    padding: 10px 14px;
+    border-radius: 0 10px 10px 0;
+    margin: 8px 0;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+  }
+  /* SYMBOL KEYBOARD */
+  .sym-keyboard {
+    padding: 10px 16px;
+    background: var(--card);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    display: flex; flex-wrap: wrap; gap: 6px;
+    align-items: center;
+  }
+  .sym-label {
+    font-size: 0.72rem; font-weight: 700; color: rgba(240,244,255,0.4);
+    text-transform: uppercase; letter-spacing: 1px;
+    width: 100%; margin-bottom: 2px;
+  }
+  .sym-btn {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: var(--white);
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Nunito', sans-serif;
+    position: relative;
+  }
+  .sym-btn:hover { background: rgba(78,205,196,0.25); transform: scale(1.15); border-color: var(--blue); }
+  .sym-btn:active { transform: scale(0.95); }
+  .sym-btn[title]:hover::after {
+    content: attr(title);
+    position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%);
+    background: #000; color: #fff; padding: 3px 7px; border-radius: 5px;
+    font-size: 0.7rem; white-space: nowrap; pointer-events: none; z-index: 99;
+  }
+</style>
+  <!-- KaTeX for beautiful math rendering -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+</head>
+<body>
+
+<!-- Blobs -->
+<div class="blob blob1"></div>
+<div class="blob blob2"></div>
+<div class="blob blob3"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo"><span>N</span><span>O</span><span>V</span><span>A</span></div>
+  <div>
+    <a href="#features">Features</a>
+    <a href="#topics">Topics</a>
+    <a href="#chat" class="nav-btn">Chat Now 🚀</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="math-symbols">
+    <span class="sym">∑</span><span class="sym">√</span>
+    <span class="sym">π</span><span class="sym">∫</span>
+    <span class="sym">±</span><span class="sym">∞</span>
+  </div>
+  <div class="hero-inner">
+    <div class="hero-badge">✨ Your Personal Math Tutor — Grades 6–12</div>
+    <h1>Meet <span class="grad1">Nova</span>, Your<br><span class="grad2">Math BFF</span> 🤖💜</h1>
+    <p>Nova doesn't just give you answers — she guides you through every step, cracks jokes, tells riddles, and makes math actually <em>fun</em>. No pressure, no rushing. Just real learning at your pace!</p>
+    <div class="hero-btns">
+      <button class="btn-primary" onclick="document.getElementById('chat').scrollIntoView({behavior:'smooth'})">Start Chatting with Nova 💬</button>
+      <button class="btn-secondary" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">See What Nova Can Do</button>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-title">What <span style="color:var(--pink)">Nova</span> Can Do 🌟</div>
+  <div class="section-sub">Way more than just a calculator — Nova is your personal math guide!</div>
+  <div class="features-grid">
+    <div class="feat-card">
+      <div class="feat-icon">🧠</div>
+      <h3>Step-by-Step Tutoring</h3>
+      <p>Nova walks you through problems one step at a time — she never just dumps the answer on you. She wants you to actually understand it!</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">📐</div>
+      <h3>Full Math Coverage (6–12)</h3>
+      <p>Algebra, Geometry, Pre-Calculus, Calculus, Statistics, Trigonometry, and more. If it's on your exam, Nova's got you covered.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">💡</div>
+      <h3>Examples on Demand</h3>
+      <p>Say "I don't understand" and Nova immediately switches to a fresh, easy example — no judgment, just clear explanation.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">😂</div>
+      <h3>100+ Unique Jokes</h3>
+      <p>Nova has a library of math jokes that never repeat in a session. Ask for one and she'll make you groan AND smile at the same time!</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🧩</div>
+      <h3>Fresh Riddles Always</h3>
+      <p>Challenge your brain with Nova's riddles. She keeps track so you never get the same one twice — perfect brain warm-ups!</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🤝</div>
+      <h3>Totally Human Vibes</h3>
+      <p>Say bye, thank you, or I give up — Nova responds like a real friend, not a robot. She gets you and never makes you feel bad.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TOPICS -->
+<section id="topics">
+  <div class="section-title">Topics <span style="color:var(--blue)">Nova</span> Covers 📚</div>
+  <div class="section-sub">Every math topic from 6th through 12th grade</div>
+  <div class="topics-grid">
+    <span class="topic-pill tp1">Fractions & Decimals</span>
+    <span class="topic-pill tp2">Basic Algebra</span>
+    <span class="topic-pill tp3">Geometry</span>
+    <span class="topic-pill tp4">Ratios & Proportions</span>
+    <span class="topic-pill tp5">Linear Equations</span>
+    <span class="topic-pill tp6">Algebra 2</span>
+    <span class="topic-pill tp1">Quadratic Equations</span>
+    <span class="topic-pill tp2">Systems of Equations</span>
+    <span class="topic-pill tp3">Polynomials</span>
+    <span class="topic-pill tp4">Trigonometry</span>
+    <span class="topic-pill tp5">Pre-Calculus</span>
+    <span class="topic-pill tp6">Calculus (Limits)</span>
+    <span class="topic-pill tp1">Derivatives</span>
+    <span class="topic-pill tp2">Integrals</span>
+    <span class="topic-pill tp3">Statistics & Probability</span>
+    <span class="topic-pill tp4">Exponents & Radicals</span>
+    <span class="topic-pill tp5">Functions & Graphs</span>
+    <span class="topic-pill tp6">Logarithms</span>
+    <span class="topic-pill tp1">Matrices</span>
+    <span class="topic-pill tp2">Complex Numbers</span>
+    <span class="topic-pill tp3">Word Problems</span>
+    <span class="topic-pill tp4">Sequences & Series</span>
+  </div>
+</section>
+
+<!-- CHATBOT -->
+<section id="chat">
+  <div class="section-title">Chat with <span style="color:var(--yellow)">Nova</span> Right Now! 💬</div>
+  <div class="section-sub">Try asking about a math problem, request a joke, or say hi!</div>
+  <div class="chat-wrapper">
+    <div class="chat-header">
+      <div class="nova-avatar">🤖</div>
+      <div class="chat-header-info">
+        <h3>Nova ✨</h3>
+        <p>Your Math Tutor BFF • Always here for you</p>
+      </div>
+    </div>
+    <div class="quick-replies">
+      <button class="qr" onclick="sendQuick('What is 144 + 289?')">➕ Addition</button>
+      <button class="qr" onclick="sendQuick('square root of 196')">√ Square Root</button>
+      <button class="qr" onclick="sendQuick('simplify 18/24')">🍕 Fractions</button>
+      <button class="qr" onclick="sendQuick('Tell me a math joke!')">😂 Joke</button>
+    </div>
+    <div class="chat-messages" id="chatMessages"></div>
+      <!-- SYMBOL KEYBOARD -->
+      <div class="sym-keyboard" id="symKeyboard">
+        <div class="sym-label">🔬 Scientific & Math Symbols — click to insert</div>
+        <!-- Arithmetic -->
+        <button class="sym-btn" title="Multiply" onclick="insertSym('×')">×</button>
+        <button class="sym-btn" title="Divide" onclick="insertSym('÷')">÷</button>
+        <button class="sym-btn" title="Plus/Minus" onclick="insertSym('±')">±</button>
+        <button class="sym-btn" title="Not Equal" onclick="insertSym('≠')">≠</button>
+        <button class="sym-btn" title="Approximately Equal" onclick="insertSym('≈')">≈</button>
+        <!-- Powers/Roots -->
+        <button class="sym-btn" title="Squared (^2)" onclick="insertSym('^2')">x²</button>
+        <button class="sym-btn" title="Cubed (^3)" onclick="insertSym('^3')">x³</button>
+        <button class="sym-btn" title="Power (^)" onclick="insertSym('^')">xⁿ</button>
+        <button class="sym-btn" title="Square Root" onclick="insertSym('√')">√</button>
+        <button class="sym-btn" title="Cube Root" onclick="insertSym('∛')">∛</button>
+        <button class="sym-btn" title="nth Root" onclick="insertSym('ⁿ√')">ⁿ√</button>
+        <!-- Comparisons -->
+        <button class="sym-btn" title="Less or Equal" onclick="insertSym('≤')">≤</button>
+        <button class="sym-btn" title="Greater or Equal" onclick="insertSym('≥')">≥</button>
+        <!-- Fractions / Special -->
+        <button class="sym-btn" title="One Half" onclick="insertSym('½')">½</button>
+        <button class="sym-btn" title="One Third" onclick="insertSym('⅓')">⅓</button>
+        <button class="sym-btn" title="One Quarter" onclick="insertSym('¼')">¼</button>
+        <button class="sym-btn" title="Three Quarters" onclick="insertSym('¾')">¾</button>
+        <!-- Greek / Constants -->
+        <button class="sym-btn" title="Pi (3.14159...)" onclick="insertSym('π')">π</button>
+        <button class="sym-btn" title="Euler's number e" onclick="insertSym('e')">e</button>
+        <button class="sym-btn" title="Infinity" onclick="insertSym('∞')">∞</button>
+        <button class="sym-btn" title="Theta" onclick="insertSym('θ')">θ</button>
+        <button class="sym-btn" title="Alpha" onclick="insertSym('α')">α</button>
+        <button class="sym-btn" title="Beta" onclick="insertSym('β')">β</button>
+        <button class="sym-btn" title="Delta" onclick="insertSym('Δ')">Δ</button>
+        <button class="sym-btn" title="Sigma / Summation" onclick="insertSym('Σ')">Σ</button>
+        <button class="sym-btn" title="Mu (mean)" onclick="insertSym('μ')">μ</button>
+        <button class="sym-btn" title="Lambda" onclick="insertSym('λ')">λ</button>
+        <!-- Calculus -->
+        <button class="sym-btn" title="Integral" onclick="insertSym('∫')">∫</button>
+        <button class="sym-btn" title="Derivative d/dx" onclick="insertSym('d/dx')">d/dx</button>
+        <button class="sym-btn" title="Partial Derivative" onclick="insertSym('∂')">∂</button>
+        <button class="sym-btn" title="Limit" onclick="insertSym('lim ')">lim</button>
+        <!-- Sets -->
+        <button class="sym-btn" title="Element of" onclick="insertSym('∈')">∈</button>
+        <button class="sym-btn" title="Not Element of" onclick="insertSym('∉')">∉</button>
+        <button class="sym-btn" title="Subset" onclick="insertSym('⊂')">⊂</button>
+        <button class="sym-btn" title="Union" onclick="insertSym('∪')">∪</button>
+        <button class="sym-btn" title="Intersection" onclick="insertSym('∩')">∩</button>
+        <!-- Scientific Notation -->
+        <button class="sym-btn" title="×10^ (scientific notation)" onclick="insertSym('×10^')">×10ⁿ</button>
+        <button class="sym-btn" title="Absolute value ||" onclick="insertSym('| |'); moveCursorBack()">|x|</button>
+        <!-- Trig -->
+        <button class="sym-btn" title="sin()" onclick="insertSym('sin()')">sin</button>
+        <button class="sym-btn" title="cos()" onclick="insertSym('cos()')">cos</button>
+        <button class="sym-btn" title="tan()" onclick="insertSym('tan()')">tan</button>
+        <button class="sym-btn" title="log base 10" onclick="insertSym('log()')">log</button>
+        <button class="sym-btn" title="natural log" onclick="insertSym('ln()')">ln</button>
+      </div>
+    <div class="chat-input-area">
+      <input type="text" id="chat-input" placeholder="Type your math problem, paste it, or use symbols above! ✏️" maxlength="1000" autocomplete="off" />
+      <button id="send-btn" onclick="sendMessage()">➤</button>
+    </div>
+  </div>
+</section>
+
+
+<!-- FOOTER -->
+<footer>
+  <p>Made with <span>♥</span> for students everywhere • Nova is here to help you shine ✨</p>
+  <p style="margin-top: 8px;">Grades 6–12 Math Tutoring • Algebra • Calculus • Geometry & More</p>
+</footer>
+
+<script>
+const JOKES = [
+  "Why was the math book so stressed? 📚 It had too many problems!",
+  "Why do plants hate math? 🌿 Because it gives them square roots!",
+  "Why was the equal sign so humble? Because it knew it wasn't less than or greater than anyone!",
+  "I asked my calculator to help with algebra. It said 'I can't even.' 😂",
+  "What do you call an angle that went to college? An academe-gle! 🎓",
+  "Why don't statisticians like to go to the gym? Because they always get sore from the standard deviation! 💪",
+  "What did the zero say to the eight? 'Nice belt!' 😄",
+  "Why was the geometry teacher late? She got caught in a polygon! 🔺",
+  "What do you call a math teacher who can't stop making pi jokes? Irrational! 🥧",
+  "How do you stay warm in a cold room? You go to the corner — it's always 90 degrees! 🔥",
+  "Why is 6 afraid of 7? Because 7 8 9! 😱",
+  "What did the full angle say to the acute angle? 'You're so acute!' 💕",
+  "Why did the student do multiplication problems on the floor? Because the teacher told him not to use tables! 😆",
+  "Why do teenagers always travel in groups of 3, 5, or 7? Because they can't even! 🤣",
+  "What's a math teacher's favorite season? Sum-mer! ☀️",
+  "Why did the mathematician name his dog 'Cauchy'? Because he left a residue at every pole! 🐶",
+  "What do you call a number that can't stay still? A roamin' numeral! 🏃",
+  "Why don't you ever see elephants hiding in trees? Because they're really good at it... just like fractions in disguise! 🐘",
+  "I tried to come up with a joke about infinity... but I couldn't find an end! ♾️",
+  "What do you call a broken calculator? You can't count on it! 🔢",
+];
+
+const RIDDLES = [
+  { q: "I have hands but I can't clap. I have a face but no eyes. What am I? 🤔", a: "A clock! ⏰ Did you get it?" },
+  { q: "The more you take, the more you leave behind. What am I? 🧐", a: "Footsteps! 👣 Clever, right?" },
+  { q: "I speak without a mouth and hear without ears. What am I? 🤫", a: "An echo! 🔊 Pretty cool!" },
+  { q: "What has keys but no locks, space but no room, and you can enter but can't go inside? ⌨️", a: "A keyboard! 💻 Did you get that one?" },
+  { q: "I'm always in front of you but can never be seen. What am I? 👀", a: "The future! 🔮 Mind blown?" },
+  { q: "What comes once in a minute, twice in a moment, but never in a thousand years? ⏳", a: "The letter 'M'! 🔤 Sneaky, huh?" },
+  { q: "A rooster lays an egg on top of a barn roof. Which way does it roll? 🐓", a: "Roosters don't lay eggs — hens do! 😄 Gotcha!" },
+  { q: "What has 13 hearts but no other organs? 🃏", a: "A deck of cards! 🂡 Did you figure it out?" },
+  { q: "What can run but never walks, has a mouth but never talks? 🏞️", a: "A river! 💧 Nice!" },
+  { q: "I'm light as a feather, but the strongest person can't hold me for more than a minute. What am I? 💨", a: "Breath! 😮‍💨 Tricky, right?" },
+  { q: "What is always coming but never arrives? 🌅", a: "Tomorrow! 📅 Great riddle, right?" },
+  { q: "What has words but never speaks? 📖", a: "A book! 📚 Easy or hard?" },
+];
+
+const GREETINGS = ["hi", "hello", "hey", "howdy", "sup", "yo", "greetings", "hiya", "what's up", "whats up"];
+const GOODBYES = ["bye", "goodbye", "see ya", "see you", "cya", "later", "gotta go", "ttyl", "farewell", "peace out"];
+const THANKS = ["thank you", "thanks", "thx", "ty", "thank u", "appreciate it", "thanks nova", "thank you nova"];
+const GIVEUP = ["i give up", "forget it", "this is too hard", "i can't do this", "i quit", "i don't want to anymore", "too hard", "i hate math"];
+const CONFUSED = ["i don't understand", "i dont understand", "confused", "i'm confused", "im confused", "what do you mean", "can you explain", "make it simpler", "i'm lost", "im lost", "huh?", "what", "explain again"];
+const OKWORDS = ["ok", "okay", "alright", "sure", "got it", "i see", "ah", "oh", "cool", "nice", "wow", "interesting", "really", "yep", "yeah", "yup", "sounds good", "makes sense"];
+
+let usedJokes = [];
+let usedRiddles = [];
+let pendingRiddle = null;
+let conversationHistory = [];
+let isTyping = false;
+
+// ─── MATH ENGINE ──────────────────────────────────────────────────────────────
+const MathEngine = {
+
+  // Round to avoid floating point noise
+  round(n, dp = 10) {
+    return parseFloat(n.toFixed(dp));
+  },
+
+  // Format number nicely
+  fmt(n) {
+    if (!isFinite(n)) return n.toString();
+    const r = this.round(n, 8);
+    // Show fraction if denominator ≤ 1000
+    if (!Number.isInteger(r)) {
+      const frac = this.toFraction(r);
+      if (frac) return `${r} (= ${frac})`;
+    }
+    return r.toString();
+  },
+
+  toFraction(decimal) {
+    const tolerance = 1e-6;
+    let h1=1,h2=0,k1=0,k2=1,b=decimal;
+    do {
+      const a = Math.floor(b);
+      let aux = h1; h1 = a*h1+h2; h2 = aux;
+      aux = k1; k1 = a*k1+k2; k2 = aux;
+      b = 1/(b-a);
+    } while (Math.abs(decimal - h1/k1) > decimal * tolerance && k1 < 1000);
+    if (k1 === 1) return null;
+    return `${h1}/${k1}`;
+  },
+
+  gcd(a, b) { return b === 0 ? a : this.gcd(b, a % b); },
+  lcm(a, b) { return Math.abs(a * b) / this.gcd(Math.abs(a), Math.abs(b)); },
+
+  factorial(n) {
+    if (n < 0) return NaN;
+    if (n === 0 || n === 1) return 1;
+    let r = 1;
+    for (let i = 2; i <= n; i++) r *= i;
+    return r;
+  },
+
+  isPrime(n) {
+    if (n < 2) return false;
+    for (let i = 2; i <= Math.sqrt(n); i++) if (n % i === 0) return false;
+    return true;
+  },
+
+  primeFactors(n) {
+    const factors = [];
+    let d = 2;
+    while (d * d <= n) {
+      while (n % d === 0) { factors.push(d); n /= d; }
+      d++;
+    }
+    if (n > 1) factors.push(n);
+    return factors;
+  },
+
+  // Parse & evaluate a safe math expression
+  safeEval(expr) {
+    // Replace common math words/symbols
+    let e = expr
+      .replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-')
+      .replace(/\^/g,'**')
+      .replace(/sqrt\s*\(/gi, 'Math.sqrt(')
+      .replace(/cbrt\s*\(/gi, 'Math.cbrt(')
+      .replace(/abs\s*\(/gi, 'Math.abs(')
+      .replace(/sin\s*\(/gi, 'Math.sin(')
+      .replace(/cos\s*\(/gi, 'Math.cos(')
+      .replace(/tan\s*\(/gi, 'Math.tan(')
+      .replace(/log\s*\(/gi, 'Math.log10(')
+      .replace(/ln\s*\(/gi, 'Math.log(')
+      .replace(/pi/gi, 'Math.PI')
+      .replace(/\be\b/g, 'Math.E')
+      .replace(/floor\s*\(/gi, 'Math.floor(')
+      .replace(/ceil\s*\(/gi, 'Math.ceil(')
+      .replace(/round\s*\(/gi, 'Math.round(');
+    // Safety: only allow safe characters
+    if (/[^0-9\s\.\+\-\*\/\(\)\.\,MathsqrtcbabsilognpEPIflorcei%\*]/.test(e.replace(/Math\.\w+/g,''))) return null;
+    try { return Function('"use strict"; return (' + e + ')')(); }
+    catch(err) { return null; }
+  },
+
+  // Detect and solve specific patterns
+  tryLocal(text) {
+    const t = text.toLowerCase().trim();
+
+    // ── Pure arithmetic expression (e.g. "12 + 7", "sqrt(144)", "3^4") ──
+    const exprMatch = text.match(/^[\d\s\.\+\-\*\/\(\)\^×÷√%,\.]+$/) ||
+      /^(sqrt|cbrt|abs|sin|cos|tan|log|ln|floor|ceil|round)\s*\(/.test(t);
+    if (exprMatch || /^\d[\d\s\+\-\*\/\^\(\)\.×÷√%]*\d$/.test(text.trim())) {
+      const val = this.safeEval(text.trim());
+      if (val !== null && isFinite(val)) return this.buildArithmeticResponse(text.trim(), val);
+    }
+
+    // ── Addition ──
+    let m = t.match(/what\s+is\s+([\d\.]+)\s*(?:plus|\+)\s*([\d\.]+)/) ||
+             t.match(/^([\d\.]+)\s*(?:plus|\+)\s*([\d\.]+)$/);
+    if (m) return this.addition(parseFloat(m[1]), parseFloat(m[2]));
+
+    // ── Subtraction ──
+    m = t.match(/what\s+is\s+([\d\.]+)\s*(?:minus|\-)\s*([\d\.]+)/) ||
+        t.match(/^([\d\.]+)\s*(?:minus|\-)\s*([\d\.]+)$/);
+    if (m) return this.subtraction(parseFloat(m[1]), parseFloat(m[2]));
+
+    // ── Multiplication ──
+    m = t.match(/what\s+is\s+([\d\.]+)\s*(?:times|multiplied by|×|\*)\s*([\d\.]+)/) ||
+        t.match(/^([\d\.]+)\s*(?:times|×|\*)\s*([\d\.]+)$/);
+    if (m) return this.multiplication(parseFloat(m[1]), parseFloat(m[2]));
+
+    // ── Division ──
+    m = t.match(/what\s+is\s+([\d\.]+)\s*(?:divided by|÷|\/)\s*([\d\.]+)/) ||
+        t.match(/^([\d\.]+)\s*(?:divided by|÷|\/)\s*([\d\.]+)$/);
+    if (m) return this.division(parseFloat(m[1]), parseFloat(m[2]));
+
+    // ── Percentage ──
+    m = t.match(/what\s+is\s+([\d\.]+)%\s+of\s+([\d\.]+)/) ||
+        t.match(/([\d\.]+)\s*percent\s+of\s+([\d\.]+)/);
+    if (m) return this.percentage(parseFloat(m[1]), parseFloat(m[2]));
+
+    m = t.match(/what\s+(?:percent|%)\s+(?:is|of)\s+([\d\.]+)\s+(?:of|from|out of)\s+([\d\.]+)/);
+    if (m) return this.percentOf(parseFloat(m[1]), parseFloat(m[2]));
+
+    // ── Square root ──
+    m = t.match(/(?:square\s+root|sqrt)\s+of\s+([\d\.]+)/) ||
+        t.match(/√\s*([\d\.]+)/);
+    if (m) return this.squareRoot(parseFloat(m[1]));
+
+    // ── Cube root ──
+    m = t.match(/(?:cube\s+root|cbrt)\s+of\s+([\d\.]+)/);
+    if (m) return this.cubeRoot(parseFloat(m[1]));
+
+    // ── Nth root ──
+    m = t.match(/([\d\.]+)(?:th|rd|nd|st)?\s+root\s+of\s+([\d\.]+)/);
+    if (m) return this.nthRoot(parseFloat(m[2]), parseFloat(m[1]));
+
+    // ── Exponent / Power ──
+    m = t.match(/(?:what\s+is\s+)?([\d\.]+)\s*(?:to\s+the\s+power\s+of|\^|\*\*)\s*([\d\.]+)/) ||
+        t.match(/([\d\.]+)\s*squared/) ;
+    if (m && t.includes('squared')) return this.power(parseFloat(m[1]), 2);
+    if (m) return this.power(parseFloat(m[1]), parseFloat(m[2]));
+
+    m = t.match(/([\d\.]+)\s*cubed/);
+    if (m) return this.power(parseFloat(m[1]), 3);
+
+    // ── Factorial ──
+    m = t.match(/(\d+)\s*!/);
+    if (!m) m = t.match(/factorial\s+(?:of\s+)?(\d+)/);
+    if (m) return this.factorialResp(parseInt(m[1]));
+
+    // ── GCD / HCF ──
+    m = t.match(/(?:gcd|gcf|hcf|greatest\s+common\s+(?:divisor|factor))\s+(?:of\s+)?([\d\.]+)\s+(?:and\s+)?([\d\.]+)/);
+    if (m) return this.gcdResp(parseInt(m[1]), parseInt(m[2]));
+
+    // ── LCM ──
+    m = t.match(/(?:lcm|least\s+common\s+multiple)\s+(?:of\s+)?([\d\.]+)\s+(?:and\s+)?([\d\.]+)/);
+    if (m) return this.lcmResp(parseInt(m[1]), parseInt(m[2]));
+
+    // ── Prime factors ──
+    m = t.match(/(?:prime\s+factors?|factori[sz]e|factor)\s+(?:of\s+)?(\d+)/);
+    if (m) return this.primeFactorResp(parseInt(m[1]));
+
+    // ── Is prime? ──
+    m = t.match(/is\s+(\d+)\s+(?:a\s+)?prime/);
+    if (m) return this.isPrimeResp(parseInt(m[1]));
+
+    // ── Absolute value ──
+    m = t.match(/(?:absolute\s+value|abs)\s+(?:of\s+)?\(?\-?([\d\.]+)\)?/);
+    if (m) return this.absResp(parseFloat(t.includes('-') ? '-'+m[1] : m[1]));
+
+    // ── Modulo / Remainder ──
+    m = t.match(/([\d\.]+)\s*(?:mod|modulo|remainder\s+when\s+divided\s+by|%)\s*([\d\.]+)/);
+    if (m) return this.moduloResp(parseFloat(m[1]), parseFloat(m[2]));
+
+    // ── Rounding ──
+    m = t.match(/round\s+([\d\.]+)\s+to\s+(?:the\s+)?nearest\s+(\d+)/);
+    if (m) return this.roundResp(parseFloat(m[1]), parseInt(m[2]));
+    m = t.match(/round\s+([\d\.]+)\s+to\s+(\d+)\s+decimal/);
+    if (m) return this.roundDpResp(parseFloat(m[1]), parseInt(m[2]));
+
+    // ── Trig (degrees) ──
+    m = t.match(/(?:sin|sine)\s+(?:of\s+)?([\d\.]+)\s*(?:degrees?|°)?/);
+    if (m) return this.trigResp('sin', parseFloat(m[1]));
+    m = t.match(/(?:cos|cosine)\s+(?:of\s+)?([\d\.]+)\s*(?:degrees?|°)?/);
+    if (m) return this.trigResp('cos', parseFloat(m[1]));
+    m = t.match(/(?:tan|tangent)\s+(?:of\s+)?([\d\.]+)\s*(?:degrees?|°)?/);
+    if (m) return this.trigResp('tan', parseFloat(m[1]));
+
+    // ── Log ──
+    m = t.match(/log(?:arithm)?\s+(?:base\s+([\d\.]+)\s+)?(?:of\s+)?([\d\.]+)/);
+    if (m) return this.logResp(parseFloat(m[2] || m[1]), m[2] ? parseFloat(m[1]) : 10);
+    m = t.match(/ln\s+(?:of\s+)?([\d\.]+)/);
+    if (m) return this.logResp(parseFloat(m[1]), Math.E, true);
+
+    // ── Fractions: simplify ──
+    m = t.match(/simplif[y|ied]\s+([\d]+)\s*\/\s*([\d]+)/);
+    if (m) return this.simplifyFraction(parseInt(m[1]), parseInt(m[2]));
+
+    // ── Fractions: add/sub/mul/div ──
+    m = t.match(/([\d]+)\s*\/\s*([\d]+)\s*(\+|\-|\*|×|÷|\/)\s*([\d]+)\s*\/\s*([\d]+)/);
+    if (m) return this.fractionOp(parseInt(m[1]),parseInt(m[2]),m[3],parseInt(m[4]),parseInt(m[5]));
+
+    // ── Convert fraction to decimal ──
+    m = t.match(/(?:convert\s+)?(\d+)\s*\/\s*(\d+)\s+(?:to\s+)?(?:decimal|as\s+decimal)/);
+    if (m) return this.fracToDecimal(parseInt(m[1]), parseInt(m[2]));
+
+    // ── Decimal to percent ──
+    m = t.match(/(?:convert\s+)?([\d\.]+)\s+(?:to\s+)?percent/);
+    if (m) return this.decToPercent(parseFloat(m[1]));
+
+    // ── Percent to decimal ──
+    m = t.match(/(?:convert\s+)?([\d\.]+)%\s+(?:to\s+)?decimal/);
+    if (m) return this.percentToDecimal(parseFloat(m[1]));
+
+    // ── Average / Mean ──
+    m = t.match(/(?:average|mean)\s+(?:of\s+)?([\d\.\s,and]+)/);
+    if (m) {
+      const nums = m[1].split(/[\s,and]+/).map(Number).filter(n => !isNaN(n));
+      if (nums.length > 1) return this.averageResp(nums);
+    }
+
+    // ── Area formulas ──
+    m = t.match(/area\s+of\s+(?:a\s+)?circle\s+(?:with\s+)?radius\s+([\d\.]+)/);
+    if (m) return this.areaCircle(parseFloat(m[1]));
+    m = t.match(/area\s+of\s+(?:a\s+)?rectangle\s+([\d\.]+)\s+(?:by|x|×)\s+([\d\.]+)/);
+    if (m) return this.areaRect(parseFloat(m[1]), parseFloat(m[2]));
+    m = t.match(/area\s+of\s+(?:a\s+)?triangle\s+(?:with\s+)?base\s+([\d\.]+)\s+(?:and\s+)?height\s+([\d\.]+)/);
+    if (m) return this.areaTriangle(parseFloat(m[1]), parseFloat(m[2]));
+
+    // ── Perimeter ──
+    m = t.match(/perimeter\s+of\s+(?:a\s+)?circle\s+(?:with\s+)?radius\s+([\d\.]+)/) ||
+        t.match(/circumference\s+(?:of\s+)?(?:a\s+)?circle\s+(?:with\s+)?radius\s+([\d\.]+)/);
+    if (m) return this.circCircumference(parseFloat(m[1]));
+
+    // ── Pythagorean theorem ──
+    m = t.match(/(?:pythagorean|hypotenuse).*?(\d+).*?(\d+)/);
+    if (m) return this.pythagResp(parseFloat(m[1]), parseFloat(m[2]));
+
+    // ── Simple linear equation: solve for x ──
+    m = t.match(/solve\s+(?:for\s+x\s*:?\s*)?([\d\.]*)x\s*([+\-])\s*([\d\.]+)\s*=\s*([\d\.]+)/i) ||
+        t.match(/([\d\.]*)x\s*([+\-])\s*([\d\.]+)\s*=\s*([\d\.]+)/i);
+    if (m) return this.linearEq(m[1] ? parseFloat(m[1]) : 1, m[2], parseFloat(m[3]), parseFloat(m[4]));
+
+    m = t.match(/solve\s+(?:for\s+x\s*:?\s*)?([\d\.]*)x\s*=\s*([\d\.]+)/i) ||
+        t.match(/([\d\.]*)x\s*=\s*([\d\.]+)/i);
+    if (m) { const a = m[1] ? parseFloat(m[1]) : 1; const b = parseFloat(m[2]); return this.linearSimple(a, b); }
+
+    // ── Quadratic: ax²+bx+c=0 ──
+    m = t.match(/solve\s+.*?([\-\d\.]*)x\^?2\s*([+\-]\s*[\d\.]*)x\s*([+\-]\s*[\d\.]+)\s*=\s*0/i);
+    if (m) return this.quadratic(parseFloat(m[1]||1), parseFloat(m[2].replace(/\s/g,'')), parseFloat(m[3].replace(/\s/g,'')));
+
+    // ── Distance formula ──
+    m = t.match(/distance\s+(?:between|from)?\s*\(?([\-\d\.]+)\s*,\s*([\-\d\.]+)\)?\s+(?:and|to)\s*\(?([\-\d\.]+)\s*,\s*([\-\d\.]+)\)?/);
+    if (m) return this.distanceFormula(parseFloat(m[1]),parseFloat(m[2]),parseFloat(m[3]),parseFloat(m[4]));
+
+    // ── Slope ──
+    m = t.match(/slope\s+(?:between|from)?\s*\(?([\-\d\.]+)\s*,\s*([\-\d\.]+)\)?\s+(?:and|to)\s*\(?([\-\d\.]+)\s*,\s*([\-\d\.]+)\)?/);
+    if (m) return this.slopeResp(parseFloat(m[1]),parseFloat(m[2]),parseFloat(m[3]),parseFloat(m[4]));
+
+    return null; // let AI handle it
+  },
+
+  buildArithmeticResponse(expr, val) {
+    return `Let me solve that! 🧮<br><br><div class="math-block">${expr} = ${this.fmt(val)}</div><br>✅ <strong>Answer: ${this.fmt(val)}</strong><br><br>Easy peasy! Want another one? 😄`;
+  },
+
+  addition(a, b) {
+    const ans = a + b;
+    return `Addition time! ➕<br><br><div class="math-block">  ${a}<br>+ ${b}<br>─────<br>  ${this.fmt(ans)}</div><br>✅ <strong>${a} + ${b} = ${this.fmt(ans)}</strong><br><br>When we add, we're combining two amounts together. Need another? 🙌`;
+  },
+
+  subtraction(a, b) {
+    const ans = a - b;
+    return `Subtraction! ➖<br><br><div class="math-block">  ${a}<br>- ${b}<br>─────<br>  ${this.fmt(ans)}</div><br>✅ <strong>${a} − ${b} = ${this.fmt(ans)}</strong><br><br>Subtraction means taking away. Need another? 😊`;
+  },
+
+  multiplication(a, b) {
+    const ans = a * b;
+    let steps = `<strong>Step 1:</strong> ${a} × ${b}<br>`;
+    if (Number.isInteger(a) && Number.isInteger(b) && a <= 20 && b <= 20)
+      steps += `<strong>Step 2:</strong> Think of it as adding ${a} exactly ${b} times → ${this.fmt(ans)}<br>`;
+    return `Multiplication! ✖️<br><br><div class="math-block">${steps}</div><br>✅ <strong>${a} × ${b} = ${this.fmt(ans)}</strong><br><br>Multiplication is just fast repeated addition! Cool, right? 🤓`;
+  },
+
+  division(a, b) {
+    if (b === 0) return "Oops! 😅 You can't divide by zero — that's actually undefined in math! It breaks the rules of the universe 🌌";
+    const ans = a / b;
+    const whole = Math.floor(a / b);
+    const rem = a % b;
+    let extra = '';
+    if (Number.isInteger(a) && Number.isInteger(b) && rem !== 0)
+      extra = `<br>💡 As a whole number: <strong>${whole} remainder ${rem}</strong>`;
+    return `Division! ➗<br><br><div class="math-block"><strong>Step 1:</strong> How many times does ${b} go into ${a}?<br><strong>Step 2:</strong> ${b} × ${whole} = ${whole*b}, remainder = ${rem}</div><br>✅ <strong>${a} ÷ ${b} = ${this.fmt(ans)}</strong>${extra}<br><br>Division is splitting into equal groups! 🍕`;
+  },
+
+  percentage(pct, total) {
+    const ans = (pct / 100) * total;
+    return `Percentage! 💯<br><br><div class="math-block"><strong>Step 1:</strong> Convert % → decimal: ${pct}% = ${pct/100}<br><strong>Step 2:</strong> Multiply: ${pct/100} × ${total} = ${this.fmt(ans)}</div><br>✅ <strong>${pct}% of ${total} = ${this.fmt(ans)}</strong><br><br>Percent literally means "per hundred" — so we always divide by 100 first! 🎯`;
+  },
+
+  percentOf(part, whole) {
+    const ans = (part / whole) * 100;
+    return `Finding the percentage! 📊<br><br><div class="math-block"><strong>Step 1:</strong> Divide: ${part} ÷ ${whole} = ${this.round(part/whole,6)}<br><strong>Step 2:</strong> × 100 = ${this.fmt(ans)}%</div><br>✅ <strong>${part} is ${this.fmt(ans)}% of ${whole}</strong> 🎉`;
+  },
+
+  squareRoot(n) {
+    if (n < 0) return `Hmm! 🤔 You can't take the square root of a negative number in the real number system! That gives us an imaginary number (like √-1 = i). Try a positive number!`;
+    const ans = Math.sqrt(n);
+    const perf = Number.isInteger(ans);
+    let steps = `<strong>Step 1:</strong> We need a number that, when multiplied by itself, equals ${n}<br>`;
+    if (perf) steps += `<strong>Step 2:</strong> ${ans} × ${ans} = ${n} ✓`;
+    else steps += `<strong>Step 2:</strong> Not a perfect square, so we use a calculator → ${this.fmt(ans)}`;
+    return `Square Root! √<br><br><div class="math-block">${steps}</div><br>✅ <strong>√${n} = ${this.fmt(ans)}</strong>${perf ? ' 🌟 (perfect square!)' : ''}<br><br>The square root is the opposite of squaring! 🔄`;
+  },
+
+  cubeRoot(n) {
+    const ans = Math.cbrt(n);
+    return `Cube Root! ∛<br><br><div class="math-block"><strong>Step 1:</strong> Find a number where x × x × x = ${n}<br><strong>Step 2:</strong> ${this.fmt(ans)} × ${this.fmt(ans)} × ${this.fmt(ans)} ≈ ${n}</div><br>✅ <strong>∛${n} = ${this.fmt(ans)}</strong> 🎉`;
+  },
+
+  nthRoot(n, root) {
+    const ans = Math.pow(n, 1/root);
+    return `${root}th Root! <br><br><div class="math-block"><strong>Step 1:</strong> ${root}√${n} = ${n}^(1/${root})<br><strong>Step 2:</strong> = ${this.fmt(ans)}</div><br>✅ <strong>${root}√${n} = ${this.fmt(ans)}</strong> 🔢`;
+  },
+
+  power(base, exp) {
+    const ans = Math.pow(base, exp);
+    let steps = `<strong>Step 1:</strong> ${base}^${exp} means multiply ${base} by itself ${exp} time(s)<br>`;
+    if (exp <= 6 && Number.isInteger(exp)) {
+      const arr = Array(exp).fill(base).join(' × ');
+      steps += `<strong>Step 2:</strong> ${arr} = ${this.fmt(ans)}`;
+    } else steps += `<strong>Step 2:</strong> = ${this.fmt(ans)}`;
+    return `Exponents! 💥<br><br><div class="math-block">${steps}</div><br>✅ <strong>${base}^${exp} = ${this.fmt(ans)}</strong><br><br>Exponents are just repeated multiplication — super useful! 🚀`;
+  },
+
+  factorialResp(n) {
+    if (n > 20) return `Whoa! ${n}! is an astronomically huge number 🤯 The largest I'll compute is 20! = ${this.factorial(20).toLocaleString()}`;
+    const ans = this.factorial(n);
+    const chain = Array.from({length:n},(_,i)=>i+1).join(' × ');
+    return `Factorial! 🎰<br><br><div class="math-block"><strong>${n}! means:</strong> ${chain}<br>= ${ans.toLocaleString()}</div><br>✅ <strong>${n}! = ${ans.toLocaleString()}</strong><br><br>Factorials are used in counting, permutations, and probability! 🎲`;
+  },
+
+  gcdResp(a, b) {
+    const ans = this.gcd(a, b);
+    const steps = [];
+    let x=a, y=b;
+    while(y){ const t=y; y=x%y; x=t; steps.push(`${x===ans?'→':''} ${arguments[0]} mod... `); }
+    return `GCD (Greatest Common Divisor)! 🔢<br><br><div class="math-block"><strong>Using Euclidean Algorithm:</strong><br>GCD(${a}, ${b})<br>= GCD(${b}, ${a%b})<br>→ Keep going until remainder = 0<br>→ Last non-zero remainder = GCD</div><br>✅ <strong>GCD(${a}, ${b}) = ${ans}</strong><br><br>GCD tells us the biggest number that divides both evenly! 🤓`;
+  },
+
+  lcmResp(a, b) {
+    const ans = this.lcm(a, b);
+    const g = this.gcd(a, b);
+    return `LCM (Least Common Multiple)! 🔢<br><br><div class="math-block"><strong>Step 1:</strong> GCD(${a}, ${b}) = ${g}<br><strong>Step 2:</strong> LCM = (${a} × ${b}) ÷ GCD<br>= (${a*b}) ÷ ${g}<br>= ${ans}</div><br>✅ <strong>LCM(${a}, ${b}) = ${ans}</strong><br><br>LCM is the smallest number both values divide into! 🙌`;
+  },
+
+  primeFactorResp(n) {
+    const factors = this.primeFactors(n);
+    const grouped = {};
+    factors.forEach(f => grouped[f] = (grouped[f]||0)+1);
+    const expr = Object.entries(grouped).map(([p,e]) => e>1?`${p}^${e}`:p).join(' × ');
+    return `Prime Factorization! 🔬<br><br><div class="math-block"><strong>Step 1:</strong> Divide by smallest prime (2, 3, 5, 7...)<br><strong>Step 2:</strong> Keep dividing until only 1 remains<br><br>${n} = ${expr}</div><br>✅ <strong>${n} = ${factors.join(' × ')}</strong><br><br>Every number is made of prime "building blocks"! 🏗️`;
+  },
+
+  isPrimeResp(n) {
+    const result = this.isPrime(n);
+    const factors = !result ? this.primeFactors(n) : [];
+    return `Is ${n} prime? 🔍<br><br><div class="math-block"><strong>Check:</strong> Can any number from 2 to √${n} (≈${Math.floor(Math.sqrt(n))}) divide ${n} evenly?<br>${result ? 'None divide it!' : `Yes! ${factors[0]} × ${n/factors[0]} = ${n}`}</div><br>✅ <strong>${n} is ${result ? '🌟 PRIME' : `NOT prime (factors: ${factors.join(' × ')})`}</strong>`;
+  },
+
+  absResp(n) {
+    return `Absolute Value! 📏<br><br><div class="math-block">|${n}| = distance from zero on number line = ${Math.abs(n)}</div><br>✅ <strong>|${n}| = ${Math.abs(n)}</strong><br><br>Absolute value is always positive — it's just the distance from zero! 🎯`;
+  },
+
+  moduloResp(a, b) {
+    const ans = a % b;
+    const q = Math.floor(a/b);
+    return `Modulo (Remainder)! 🔄<br><br><div class="math-block"><strong>Step 1:</strong> ${a} ÷ ${b} = ${q} remainder ${ans}<br><strong>Step 2:</strong> Check: ${b} × ${q} = ${b*q}, and ${a} − ${b*q} = ${ans}</div><br>✅ <strong>${a} mod ${b} = ${ans}</strong><br><br>Modulo is super useful in programming and clock math! ⏰`;
+  },
+
+  roundResp(n, nearest) {
+    const ans = Math.round(n / nearest) * nearest;
+    return `Rounding! 🎯<br><br><div class="math-block"><strong>Round ${n} to nearest ${nearest}:</strong><br>Halfway point between multiples: check if digit ≥ 5<br>→ ${ans}</div><br>✅ <strong>${n} rounded to nearest ${nearest} = ${ans}</strong>`;
+  },
+
+  roundDpResp(n, dp) {
+    const ans = parseFloat(n.toFixed(dp));
+    return `Rounding Decimals! 🎯<br><br><div class="math-block"><strong>Round ${n} to ${dp} decimal place(s):</strong><br>Look at the ${dp+1}th decimal digit...<br>→ ${ans}</div><br>✅ <strong>${n} ≈ ${ans}</strong> (to ${dp} d.p.) 🙌`;
+  },
+
+  trigResp(fn, deg) {
+    const rad = deg * Math.PI / 180;
+    const fnMap = { sin: Math.sin, cos: Math.cos, tan: Math.tan };
+    const ans = fnMap[fn](rad);
+    return `Trigonometry! 📐<br><br><div class="math-block"><strong>Step 1:</strong> Convert ${deg}° to radians: ${deg} × π/180 = ${this.fmt(rad)} rad<br><strong>Step 2:</strong> Calculate ${fn}(${this.fmt(rad)}) = ${this.fmt(ans)}</div><br>✅ <strong>${fn}(${deg}°) = ${this.fmt(ans)}</strong><br><br>Remember SOH-CAH-TOA for right triangles! 📏`;
+  },
+
+  logResp(n, base, isLn = false) {
+    if (n <= 0) return `Oops! 😅 You can only take the log of a <em>positive</em> number!`;
+    const ans = isLn ? Math.log(n) : Math.log(n) / Math.log(base);
+    const label = isLn ? `ln(${n})` : `log${base === 10 ? '' : '_'+base}(${n})`;
+    return `Logarithm! 📊<br><br><div class="math-block"><strong>Step 1:</strong> ${label} asks: "${isLn?'e':'base '+base} to what power = ${n}?"<br><strong>Step 2:</strong> Answer = ${this.fmt(ans)}<br><strong>Check:</strong> ${isLn?'e':'base'}^${this.fmt(ans)} ≈ ${n}</div><br>✅ <strong>${label} = ${this.fmt(ans)}</strong> 🔢`;
+  },
+
+  simplifyFraction(num, den) {
+    const g = this.gcd(Math.abs(num), Math.abs(den));
+    const sn = num/g, sd = den/g;
+    if (g === 1) return `The fraction ${num}/${den} is already in its simplest form! ✅ <strong>${num}/${den}</strong> 🎉`;
+    return `Simplifying Fractions! 🍕<br><br><div class="math-block"><strong>Step 1:</strong> Find GCD(${num}, ${den}) = ${g}<br><strong>Step 2:</strong> Divide both by ${g}: ${num}÷${g} = ${sn}, ${den}÷${g} = ${sd}</div><br>✅ <strong>${num}/${den} = ${sn}/${sd}</strong> 🙌`;
+  },
+
+  fractionOp(n1, d1, op, n2, d2) {
+    let rn, rd;
+    const opSymbols = {'+':'Addition','-':'Subtraction','*':'Multiplication','×':'Multiplication','÷':'Division','/':'Division'};
+    if (op === '+' || op === '-') {
+      const lcm = this.lcm(d1, d2);
+      const nn1 = n1 * (lcm/d1), nn2 = n2 * (lcm/d2);
+      rn = op === '+' ? nn1 + nn2 : nn1 - nn2;
+      rd = lcm;
+      const g = this.gcd(Math.abs(rn), rd);
+      return `Fraction ${opSymbols[op]}! 🍕<br><br><div class="math-block"><strong>Step 1:</strong> LCM(${d1},${d2}) = ${lcm}<br><strong>Step 2:</strong> Convert: ${n1}/${d1} = ${nn1}/${lcm}, ${n2}/${d2} = ${nn2}/${lcm}<br><strong>Step 3:</strong> ${op}: (${nn1} ${op} ${nn2}) / ${lcm} = ${rn}/${rd}<br><strong>Step 4:</strong> Simplify: ÷${g} → ${rn/g}/${rd/g}</div><br>✅ <strong>${n1}/${d1} ${op} ${n2}/${d2} = ${rn/g}/${rd/g}</strong>`;
+    } else {
+      // multiply or divide
+      const isDiv = op === '÷' || op === '/';
+      if (isDiv) { [n2, d2] = [d2, n2]; }
+      rn = n1 * n2; rd = d1 * d2;
+      const g = this.gcd(Math.abs(rn), rd);
+      return `Fraction ${isDiv?'Division':'Multiplication'}! 🍕<br><br><div class="math-block"><strong>Step 1:</strong> ${isDiv?`Flip the second fraction: → ${d2}/${n2}`:'Multiply numerators and denominators'}<br><strong>Step 2:</strong> ${n1}×${n2} = ${rn}, ${d1}×${d2} = ${rd}<br><strong>Step 3:</strong> Simplify: ${rn}/${rd} ÷ ${g} = ${rn/g}/${rd/g}</div><br>✅ <strong>= ${rn/g}/${rd/g}</strong> 🎉`;
+    }
+  },
+
+  fracToDecimal(n, d) {
+    if (d === 0) return "Can't divide by zero! 😅";
+    const ans = n/d;
+    return `Fraction to Decimal! 🔢<br><br><div class="math-block"><strong>Step 1:</strong> Divide: ${n} ÷ ${d} = ${this.fmt(ans)}</div><br>✅ <strong>${n}/${d} = ${this.fmt(ans)}</strong> 🙌`;
+  },
+
+  decToPercent(n) {
+    const ans = n * 100;
+    return `Decimal to Percent! 💯<br><br><div class="math-block"><strong>Step 1:</strong> Multiply by 100: ${n} × 100 = ${ans}%</div><br>✅ <strong>${n} = ${ans}%</strong> 🎉`;
+  },
+
+  percentToDecimal(p) {
+    const ans = p / 100;
+    return `Percent to Decimal! 🔢<br><br><div class="math-block"><strong>Step 1:</strong> Divide by 100: ${p} ÷ 100 = ${ans}</div><br>✅ <strong>${p}% = ${ans}</strong> 🙌`;
+  },
+
+  averageResp(nums) {
+    const sum = nums.reduce((a,b)=>a+b,0);
+    const avg = sum / nums.length;
+    return `Average (Mean)! 📊<br><br><div class="math-block"><strong>Step 1:</strong> Add all: ${nums.join(' + ')} = ${sum}<br><strong>Step 2:</strong> Divide by count (${nums.length}): ${sum} ÷ ${nums.length} = ${this.fmt(avg)}</div><br>✅ <strong>Mean = ${this.fmt(avg)}</strong> 🎯`;
+  },
+
+  areaCircle(r) {
+    const ans = Math.PI * r * r;
+    return `Area of a Circle! ⭕<br><br><div class="math-block"><strong>Formula:</strong> A = π × r²<br><strong>Step 1:</strong> r² = ${r}² = ${r*r}<br><strong>Step 2:</strong> π × ${r*r} = ${this.fmt(ans)}</div><br>✅ <strong>Area = ${this.fmt(ans)} square units</strong> (~${this.round(ans,2)}) 🎉`;
+  },
+
+  areaRect(l, w) {
+    const ans = l * w;
+    return `Area of Rectangle! ▭<br><br><div class="math-block"><strong>Formula:</strong> A = length × width<br><strong>Step 1:</strong> ${l} × ${w} = ${ans}</div><br>✅ <strong>Area = ${ans} square units</strong> 🙌`;
+  },
+
+  areaTriangle(b, h) {
+    const ans = 0.5 * b * h;
+    return `Area of Triangle! △<br><br><div class="math-block"><strong>Formula:</strong> A = ½ × base × height<br><strong>Step 1:</strong> ½ × ${b} × ${h}<br><strong>Step 2:</strong> = 0.5 × ${b*h} = ${ans}</div><br>✅ <strong>Area = ${ans} square units</strong> 🎉`;
+  },
+
+  circCircumference(r) {
+    const ans = 2 * Math.PI * r;
+    return `Circumference of Circle! ⭕<br><br><div class="math-block"><strong>Formula:</strong> C = 2 × π × r<br><strong>Step 1:</strong> 2 × π × ${r}<br><strong>Step 2:</strong> = ${this.fmt(ans)}</div><br>✅ <strong>Circumference = ${this.fmt(ans)} units</strong> (~${this.round(ans,2)}) 🎉`;
+  },
+
+  pythagResp(a, b) {
+    const c = Math.sqrt(a*a + b*b);
+    return `Pythagorean Theorem! 📐<br><br><div class="math-block"><strong>Formula:</strong> c² = a² + b²<br><strong>Step 1:</strong> a² = ${a}² = ${a*a}<br><strong>Step 2:</strong> b² = ${b}² = ${b*b}<br><strong>Step 3:</strong> c² = ${a*a} + ${b*b} = ${a*a+b*b}<br><strong>Step 4:</strong> c = √${a*a+b*b} = ${this.fmt(c)}</div><br>✅ <strong>Hypotenuse c = ${this.fmt(c)}</strong> 🔺`;
+  },
+
+  linearEq(a, op, b, rhs) {
+    // ax ± b = rhs
+    const c = op === '+' ? rhs - b : rhs + b;
+    const x = c / a;
+    return `Solving Linear Equation! 🔡<br><br><div class="math-block"><strong>Equation:</strong> ${a !== 1 ? a : ''}x ${op} ${b} = ${rhs}<br><strong>Step 1:</strong> Move ${b} to right: ${a !== 1 ? a : ''}x = ${rhs} ${op==='+' ? '-' : '+'} ${b} = ${c}<br><strong>Step 2:</strong> Divide by ${a}: x = ${c} ÷ ${a} = ${this.fmt(x)}</div><br>✅ <strong>x = ${this.fmt(x)}</strong> 🎉`;
+  },
+
+  linearSimple(a, b) {
+    const x = b / a;
+    return `Solving for x! 🔡<br><br><div class="math-block"><strong>Equation:</strong> ${a !== 1 ? a : ''}x = ${b}<br><strong>Step 1:</strong> Divide both sides by ${a}: x = ${b} ÷ ${a} = ${this.fmt(x)}</div><br>✅ <strong>x = ${this.fmt(x)}</strong> 🙌`;
+  },
+
+  quadratic(a, b, c) {
+    const disc = b*b - 4*a*c;
+    if (disc < 0) return `Quadratic Formula! 📐<br><br><div class="math-block"><strong>${a}x² ${b>=0?'+':''}${b}x ${c>=0?'+':''}${c} = 0</strong><br>Discriminant = b²−4ac = ${b*b} − ${4*a*c} = ${disc}<br>Discriminant < 0 → <strong>No real solutions</strong> (complex roots!)</div><br>✅ <strong>No real roots</strong> — the parabola doesn't cross the x-axis! 🌟`;
+    const x1 = (-b + Math.sqrt(disc)) / (2*a);
+    const x2 = (-b - Math.sqrt(disc)) / (2*a);
+    return `Quadratic Formula! 📐<br><br><div class="math-block"><strong>Formula:</strong> x = (−b ± √(b²−4ac)) / 2a<br><strong>a=${a}, b=${b}, c=${c}</strong><br><strong>Step 1:</strong> Discriminant = ${b}² − 4(${a})(${c}) = ${disc}<br><strong>Step 2:</strong> √${disc} = ${this.fmt(Math.sqrt(disc))}<br><strong>Step 3:</strong> x = (${-b} ± ${this.fmt(Math.sqrt(disc))}) ÷ ${2*a}</div><br>✅ <strong>x₁ = ${this.fmt(x1)}</strong> &nbsp;|&nbsp; <strong>x₂ = ${this.fmt(x2)}</strong> 🎉`;
+  },
+
+  distanceFormula(x1, y1, x2, y2) {
+    const dx = x2-x1, dy = y2-y1;
+    const ans = Math.sqrt(dx*dx + dy*dy);
+    return `Distance Formula! 📏<br><br><div class="math-block"><strong>Formula:</strong> d = √((x₂−x₁)² + (y₂−y₁)²)<br><strong>Step 1:</strong> Δx = ${x2}−${x1} = ${dx}, Δy = ${y2}−${y1} = ${dy}<br><strong>Step 2:</strong> d = √(${dx}² + ${dy}²) = √(${dx*dx} + ${dy*dy}) = √${dx*dx+dy*dy}<br><strong>Step 3:</strong> = ${this.fmt(ans)}</div><br>✅ <strong>Distance = ${this.fmt(ans)} units</strong> 🗺️`;
+  },
+
+  slopeResp(x1, y1, x2, y2) {
+    if (x2 === x1) return `✅ <strong>The slope is undefined</strong> — this is a vertical line! (x₁ = x₂ = ${x1}) 📏`;
+    const ans = (y2-y1)/(x2-x1);
+    return `Slope! 📈<br><br><div class="math-block"><strong>Formula:</strong> m = (y₂−y₁) / (x₂−x₁)<br><strong>Step 1:</strong> Rise = ${y2}−${y1} = ${y2-y1}<br><strong>Step 2:</strong> Run = ${x2}−${x1} = ${x2-x1}<br><strong>Step 3:</strong> m = ${y2-y1} ÷ ${x2-x1} = ${this.fmt(ans)}</div><br>✅ <strong>Slope m = ${this.fmt(ans)}</strong> 🎯`;
+  }
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
+function getRandomJoke() {
+  if (usedJokes.length >= JOKES.length) usedJokes = [];
+  let available = JOKES.filter((_, i) => !usedJokes.includes(i));
+  let idx = JOKES.indexOf(available[Math.floor(Math.random() * available.length)]);
+  usedJokes.push(idx);
+  return JOKES[idx];
+}
+
+function getRandomRiddle() {
+  if (usedRiddles.length >= RIDDLES.length) usedRiddles = [];
+  let available = RIDDLES.filter((_, i) => !usedRiddles.includes(i));
+  let idx = RIDDLES.indexOf(available[Math.floor(Math.random() * available.length)]);
+  usedRiddles.push(idx);
+  return RIDDLES[idx];
+}
+
+function matchesAny(text, arr) {
+  return arr.some(phrase => text.toLowerCase().includes(phrase));
+}
+
+function renderMath(el) {
+  if (typeof renderMathInElement !== 'undefined') {
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '\\[', right: '\\]', display: true},
+        {left: '\\(', right: '\\)', display: false},
+        {left: '$', right: '$', display: false}
+      ],
+      throwOnError: false,
+      output: 'html'
+    });
+  }
+}
+
+function addMessage(role, text, delay = 0) {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      const container = document.getElementById('chatMessages');
+      const div = document.createElement('div');
+      div.className = `msg ${role}`;
+      const avatar = role === 'nova' ? '🤖' : '😊';
+      div.innerHTML = `<div class="msg-avatar">${avatar}</div><div class="msg-bubble"></div>`;
+      const bubble = div.querySelector('.msg-bubble');
+      // Set as HTML then render math inside it
+      bubble.innerHTML = text;
+      container.appendChild(div);
+      renderMath(bubble);
+      container.scrollTop = container.scrollHeight;
+      resolve();
+    }, delay);
+  });
+}
+
+function showTyping() {
+  const container = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'msg nova';
+  div.id = 'typing-msg';
+  div.innerHTML = `
+    <div class="msg-avatar">🤖</div>
+    <div class="typing-indicator"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+  `;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typing-msg');
+  if (t) t.remove();
+}
+
+function getTypingDelay(text) {
+  return Math.min(Math.max(text.length * 18, 800), 2500);
+}
+
+// ── PASTE & SYMBOL PREPROCESSOR ──────────────────────────────────────────────
+// Handles copy-paste from textbooks, Google, Word, Khan Academy, Wolfram, etc.
+// Covers: Unicode math symbols, superscripts, subscripts, arrows, all variants
+
+function preprocessForNova(text) {
+  let t = text;
+
+  // ── SCIENTIFIC NOTATION (must come first) ──
+  // Patterns like: 3×10^8, 3·10^8, 3*10^8, 6.02×10²³, 1.6 x 10^-19
+  t = t.replace(/(\d[\d.]*)\s*[×x·\*]\s*10\^(-?\d+)/gi, '$1 * 10^$2');
+  t = t.replace(/(\d[\d.]*)\s*[×x·\*]\s*10([⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺]+)/g, (m, base, exp) => {
+    const supMap = {'⁰':'0','¹':'1','²':'2','³':'3','⁴':'4','⁵':'5','⁶':'6','⁷':'7','⁸':'8','⁹':'9','⁻':'-','⁺':'+'};
+    const expStr = exp.split('').map(c => supMap[c]||c).join('');
+    return base + ' * 10^' + expStr;
+  });
+  // E-notation: 3.0E8, 6.02e23
+  t = t.replace(/(\d[\d.]*)[Ee]([+\-]?\d+)/g, '$1 * 10^$2');
+
+  // ── SUPERSCRIPT DIGITS → ^n (must be before other replacements) ──
+  // Unicode superscript: ⁰¹²³⁴⁵⁶⁷⁸⁹ and superscript minus/plus
+  t = t.replace(/([a-zA-Z0-9\)])([⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺]+)/g, (m, base, sup) => {
+    const supMap = {'⁰':'0','¹':'1','²':'2','³':'3','⁴':'4','⁵':'5','⁶':'6','⁷':'7','⁸':'8','⁹':'9','⁻':'-','⁺':'+'};
+    const expStr = sup.split('').map(c => supMap[c]||c).join('');
+    return base + '^' + expStr;
+  });
+  // Standalone superscript sequences
+  t = t.replace(/⁰/g,'0').replace(/¹/g,'1').replace(/²/g,'^2').replace(/³/g,'^3');
+  t = t.replace(/⁴/g,'^4').replace(/⁵/g,'^5').replace(/⁶/g,'^6');
+  t = t.replace(/⁷/g,'^7').replace(/⁸/g,'^8').replace(/⁹/g,'^9');
+
+  // ── SUBSCRIPT DIGITS → _n ──
+  // Unicode subscript: ₀₁₂₃₄₅₆₇₈₉
+  t = t.replace(/₀/g,'_0').replace(/₁/g,'_1').replace(/₂/g,'_2').replace(/₃/g,'_3');
+  t = t.replace(/₄/g,'_4').replace(/₅/g,'_5').replace(/₆/g,'_6').replace(/₇/g,'_7');
+  t = t.replace(/₈/g,'_8').replace(/₉/g,'_9');
+
+  // ── SQUARE & CUBE ROOT VARIANTS ──
+  // √, ∛, ∜, and text with overlines from copy-paste
+  t = t.replace(/∜/g, 'fourthroot of ');
+  t = t.replace(/∛/g, 'cbrt(');
+  t = t.replace(/√/g,  'sqrt(');
+  // Patch: add closing paren if sqrt/cbrt followed by number/expression
+  t = t.replace(/sqrt\((\d[\d.]*)\b(?!\))/g, 'sqrt($1)');
+  t = t.replace(/cbrt\((\d[\d.]*)\b(?!\))/g, 'cbrt($1)');
+
+  // ── MULTIPLICATION / DIVISION VARIANTS ──
+  t = t.replace(/×/g, ' * ');    // × U+00D7
+  t = t.replace(/✕/g, ' * ');    // ✕ heavy multiplication
+  t = t.replace(/⋅/g, ' * ');    // ⋅ middle dot
+  t = t.replace(/·/g, ' * ');    // · center dot (U+00B7)
+  t = t.replace(/∙/g, ' * ');    // ∙ bullet operator
+  t = t.replace(/÷/g, ' / ');    // ÷ division sign
+  t = t.replace(/∕/g, ' / ');    // ∕ division slash (U+2215)
+  t = t.replace(/⁄/g, '/');      // ⁄ fraction slash (U+2044)
+
+  // ── MINUS / DASH VARIANTS (common paste issue) ──
+  t = t.replace(/−/g, '-');      // − U+2212 minus sign
+  t = t.replace(/‐/g, '-');      // ‐ hyphen
+  t = t.replace(/‑/g, '-');      // ‑ non-breaking hyphen
+  t = t.replace(/–/g, '-');      // – en dash
+  t = t.replace(/—/g, '-');      // — em dash
+  t = t.replace(/⁻/g, '-');      // ⁻ superscript minus
+
+  // ── PLUS VARIANTS ──
+  t = t.replace(/＋/g, '+');     // fullwidth plus
+  t = t.replace(/⁺/g, '+');     // superscript plus
+
+  // ── EQUALS VARIANTS ──
+  t = t.replace(/＝/g, '=');     // fullwidth equals
+  t = t.replace(/≡/g, 'is congruent to');
+  t = t.replace(/≜/g, 'is defined as');
+  t = t.replace(/≝/g, 'is defined as');
+
+  // ── COMPARISON OPERATORS ──
+  t = t.replace(/≤/g, ' <= ');
+  t = t.replace(/≥/g, ' >= ');
+  t = t.replace(/≠/g, ' != ');
+  t = t.replace(/≈/g, ' approximately equals ');
+  t = t.replace(/∝/g, ' is proportional to ');
+  t = t.replace(/≪/g, ' << ');
+  t = t.replace(/≫/g, ' >> ');
+  t = t.replace(/≲/g, ' less than or approximately equal to ');
+  t = t.replace(/≳/g, ' greater than or approximately equal to ');
+  t = t.replace(/≅/g, ' is approximately equal to ');
+  t = t.replace(/∼/g, ' is similar to ');
+  t = t.replace(/~/g, ' approximately ');
+
+  // ── PLUS-MINUS ──
+  t = t.replace(/±/g, ' +/- ');
+  t = t.replace(/∓/g, ' -/+ ');
+
+  // ── FRACTIONS (Unicode fraction characters) ──
+  t = t.replace(/½/g, '1/2');
+  t = t.replace(/⅓/g, '1/3');
+  t = t.replace(/⅔/g, '2/3');
+  t = t.replace(/¼/g, '1/4');
+  t = t.replace(/¾/g, '3/4');
+  t = t.replace(/⅕/g, '1/5');
+  t = t.replace(/⅖/g, '2/5');
+  t = t.replace(/⅗/g, '3/5');
+  t = t.replace(/⅘/g, '4/5');
+  t = t.replace(/⅙/g, '1/6');
+  t = t.replace(/⅚/g, '5/6');
+  t = t.replace(/⅛/g, '1/8');
+  t = t.replace(/⅜/g, '3/8');
+  t = t.replace(/⅝/g, '5/8');
+  t = t.replace(/⅞/g, '7/8');
+  t = t.replace(/⅐/g, '1/7');
+  t = t.replace(/⅑/g, '1/9');
+  t = t.replace(/⅒/g, '1/10');
+
+  // ── GREEK LETTERS (upper & lower) ──
+  t = t.replace(/[Ππ]/g, 'pi');
+  t = t.replace(/∞/g, 'infinity');
+  t = t.replace(/[Θθϑ]/g, 'theta');
+  t = t.replace(/[Αα]/g, 'alpha');
+  t = t.replace(/[Ββ]/g, 'beta');
+  t = t.replace(/[Δδ]/g, 'delta');
+  t = t.replace(/[Σσς]/g, 'sigma');
+  t = t.replace(/[Μμ]/g, 'mu');
+  t = t.replace(/[Λλ]/g, 'lambda');
+  t = t.replace(/[Γγ]/g, 'gamma');
+  t = t.replace(/[Φφϕ]/g, 'phi');
+  t = t.replace(/[Ψψ]/g, 'psi');
+  t = t.replace(/[Ωω]/g, 'omega');
+  t = t.replace(/[Ρρ]/g, 'rho');
+  t = t.replace(/[Νν]/g, 'nu');
+  t = t.replace(/[Εε]/g, 'epsilon');
+  t = t.replace(/[Ηη]/g, 'eta');
+  t = t.replace(/[Ττ]/g, 'tau');
+  t = t.replace(/[Ξξ]/g, 'xi');
+  t = t.replace(/[Ζζ]/g, 'zeta');
+  t = t.replace(/[Χχ]/g, 'chi');
+  t = t.replace(/[Ιι]/g, 'iota');
+  t = t.replace(/[Κκ]/g, 'kappa');
+  t = t.replace(/ℇ/g, "Euler's number e");
+  t = t.replace(/ℏ/g, "h-bar");
+
+  // ── CALCULUS ──
+  t = t.replace(/∫∫∫/g, 'triple integral of');
+  t = t.replace(/∫∫/g,  'double integral of');
+  t = t.replace(/∫/g,   'integral of');
+  t = t.replace(/∮/g,   'contour integral of');
+  t = t.replace(/∂/g,   'partial derivative of');
+  t = t.replace(/∇/g,   'gradient/nabla of');
+  t = t.replace(/d\/dx/g,'derivative with respect to x of');
+  t = t.replace(/d\/dy/g,'derivative with respect to y of');
+  t = t.replace(/d\/dt/g,'derivative with respect to t of');
+  t = t.replace(/lim\s*→/g, 'limit as x approaches');
+  t = t.replace(/→/g, ' approaches ');   // arrow for limits
+  t = t.replace(/⟶/g, ' approaches ');
+  t = t.replace(/↦/g, ' maps to ');
+
+  // ── ABSOLUTE VALUE (common paste patterns) ──
+  // |x| patterns — keep as is, Nova understands |x|
+  // But handle double bars ‖ (norm)
+  t = t.replace(/‖/g, '|| ');  // double bar = norm
+
+  // ── LOGIC & SETS ──
+  t = t.replace(/∈/g, ' is an element of ');
+  t = t.replace(/∉/g, ' is not an element of ');
+  t = t.replace(/⊆/g, ' is a subset or equal to ');
+  t = t.replace(/⊂/g, ' is a subset of ');
+  t = t.replace(/⊇/g, ' is a superset or equal to ');
+  t = t.replace(/⊃/g, ' is a superset of ');
+  t = t.replace(/∪/g, ' union ');
+  t = t.replace(/∩/g, ' intersection ');
+  t = t.replace(/∅/g, ' empty set ');
+  t = t.replace(/∧/g, ' and ');
+  t = t.replace(/∨/g, ' or ');
+  t = t.replace(/¬/g, ' not ');
+  t = t.replace(/∀/g, ' for all ');
+  t = t.replace(/∃/g, ' there exists ');
+  t = t.replace(/∄/g, ' there does not exist ');
+  t = t.replace(/⇒/g, ' implies ');
+  t = t.replace(/⇔/g, ' if and only if ');
+
+  // ── DOTS / ELLIPSIS ──
+  t = t.replace(/⋮/g, '...'); // vertical dots
+  t = t.replace(/⋯/g, '...');
+  t = t.replace(/…/g, '...');
+
+  // ── ANGLE / GEOMETRY ──
+  t = t.replace(/∠/g, 'angle ');
+  t = t.replace(/△/g, 'triangle ');
+  t = t.replace(/□/g, 'square ');
+  t = t.replace(/⊥/g, ' is perpendicular to ');
+  t = t.replace(/∥/g, ' is parallel to ');
+  t = t.replace(/°/g, ' degrees ');   // degree symbol
+
+  // ── STATISTICS / SPECIAL ──
+  t = t.replace(/x̄/g, 'x-bar (mean)');
+  t = t.replace(/ȳ/g, 'y-bar (mean of y)');
+  t = t.replace(/ŷ/g, 'y-hat (predicted y)');
+  t = t.replace(/√̄/g, 'sqrt');
+
+  // ── FULLWIDTH DIGITS AND LETTERS (from some copy sources) ──
+  const fwMap = {
+    '０':'0','１':'1','２':'2','３':'3','４':'4',
+    '５':'5','６':'6','７':'7','８':'8','９':'9',
+  };
+  t = t.replace(/[０-９]/g, c => fwMap[c] || c);
+
+  // ── INVISIBLE / ZERO-WIDTH CHARS (common in web copy-paste) ──
+  t = t.replace(/[\u200B\u200C\u200D\uFEFF\u00AD]/g, '');  // zero-width spaces, soft hyphens
+  t = t.replace(/\u00A0/g, ' ');  // non-breaking space → regular space
+
+  // ── CLEAN UP extra spaces ──
+  t = t.replace(/\s{3,}/g, '  ');
+
+  return t;
+}
+
+function insertSym(sym) {
+  const input = document.getElementById('chat-input');
+  const start = input.selectionStart;
+  const end = input.selectionEnd;
+  const val = input.value;
+  input.value = val.substring(0, start) + sym + val.substring(end);
+  const newPos = start + sym.length;
+  input.setSelectionRange(newPos, newPos);
+  input.focus();
+}
+
+// Used for |x| button — positions cursor inside the bars
+function moveCursorBack() {
+  const input = document.getElementById('chat-input');
+  const pos = input.selectionStart;
+  input.setSelectionRange(pos - 2, pos - 2);
+  input.focus();
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function getNovaChatResponse(rawMessage) {
+  // Preprocess scientific symbols into readable text for the AI
+  const userMessage = preprocessForNova(rawMessage);
+  conversationHistory.push({ role: "user", content: userMessage });
+
+  const systemPrompt = `You are Nova, a warm, patient, encouraging math tutor for students in grades 6-12. You guide students step by step - you don't just give answers.
+
+SCIENTIFIC & MATH NOTATION YOU MUST UNDERSTAND:
+- Scientific notation: 3 * 10^8 means 3×10⁸ (three hundred million)
+- sqrt means square root, cbrt means cube root, nth root of N means Nth root
+- pi = 3.14159..., e = Euler's number 2.71828..., infinity = ∞
+- theta, alpha, beta, delta, sigma/sum, mu, lambda = Greek letters used in math
+- partial derivative of = ∂, integral of = ∫, derivative with respect to x of = d/dx
+- lim = limit (calculus), approximately equals = ≈, != means not equal
+- union/intersection = set operations, element of / subset = set membership
+- sin(), cos(), tan() = trigonometric functions (assume degrees unless stated)
+- log() = log base 10, ln() = natural log (base e)
+- x^2 = x squared, x^3 = x cubed, x^n = x to the power n
+- 1/2 = one half, 1/3 = one third, 3/4 = three quarters
+- +/- means plus or minus (as in quadratic solutions)
+- <= means less than or equal, >= means greater than or equal
+
+SCIENTIFIC TOPICS YOU HANDLE (Grades 6-12):
+Arithmetic, fractions, decimals, percentages, ratios, PEMDAS, exponents, scientific notation (e.g. 6.02×10^23 Avogadro's number), square/cube/nth roots, absolute value, linear & quadratic equations, systems of equations, polynomials, factoring, algebra 2, geometry (area/perimeter/volume/angles), Pythagorean theorem, coordinate geometry (slope/distance/midpoint), trigonometry (sin/cos/tan/SOH-CAH-TOA/unit circle/inverse trig), radians & degrees, pre-calculus (functions/transformations/sequences/series/limits), calculus basics (limits/derivatives/chain rule/product rule/integrals), statistics (mean/median/mode/standard deviation/probability/distributions), logarithms (log properties/natural log/change of base), complex numbers, matrices, set theory basics.
+
+PERSONALITY:
+- Warm, fun, patient - like a cool older sibling who rocks at math
+- Use casual language and occasional emojis
+- Celebrate effort AND correct answers enthusiastically
+- Never shame wrong answers - always gentle correction with a hint
+- Respond naturally to casual chat then redirect to math
+
+CORE TUTORING METHOD - GUIDE DON'T GIVE:
+When a student gives a math problem:
+1. IDENTIFY the problem type enthusiastically
+2. Ask ONE focused question to get them started on Step 1
+3. WAIT for their answer:
+   - CORRECT: Celebrate, confirm clearly, ask about the NEXT step
+   - WRONG: Gentle correction + ONE hint, ask to try again
+   - "I don't know": Give a hint (not the answer), ask to try
+   - After 2 failed attempts on same step: reveal JUST that step with explanation, move on
+4. Repeat step by step until fully solved
+5. Celebrate the final answer: they earned it!
+
+SPECIAL CASES:
+- "I give up": Encourage warmly + one hint, never just give the answer
+- "I don't understand": Re-explain current step more simply with analogy
+- "Just tell me the answer": Warmly decline, say they're close, keep guiding
+- "Show me an example": Solve a DIFFERENT similar problem fully, then return to theirs
+
+RULES:
+- ONE question at a time only
+- Short focused messages - one step at a time
+- Never list all steps at once
+- For casual replies (ok/cool/wow) - brief response then redirect to math
+- For non-math topics: "Math is my superpower! I only help with grades 6-12 math!"
+
+MATH FORMATTING - VERY IMPORTANT:
+- ALWAYS render math using LaTeX so it displays beautifully, never as raw code
+- Inline math (inside a sentence): wrap with \( and \) like: \(x^2 + 3x = 0\)
+- Display math (on its own line, centered): wrap with $$ and $$ like: $$x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}$$
+- Use \frac{a}{b} for fractions
+- Use \sqrt{x} for square root, \sqrt[3]{x} for cube root, \sqrt[n]{x} for nth root
+- Use ^{} for exponents: x^{2}, n^{2}+8
+- Use \cdot or \times for multiplication
+- Use \pm for plus-minus
+- Example: NEVER write "sqrt(x^2+8)", ALWAYS write \(\sqrt{x^2+8}\)
+- When a student pastes a LaTeX problem like \(xy=\sqrt[3]{...}\), display it back beautifully rendered`;
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 900,
+        system: systemPrompt,
+        messages: conversationHistory
+      })
+    });
+    const data = await response.json();
+    const reply = data.content.map(b => b.text || "").join("\n").trim();
+    conversationHistory.push({ role: "assistant", content: reply });
+    return reply;
+  } catch (err) {
+    return "Oops! My brain had a little glitch there! Give me a second and try again.";
+  }
+}
+
+async function sendMessage() {
+  if (isTyping) return;
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+
+  input.value = '';
+  // Show the ORIGINAL text (with symbols) to the user in the chat bubble
+  await addMessage('user', text);
+  isTyping = true;
+  document.getElementById('send-btn').style.opacity = '0.5';
+
+  const lower = text.toLowerCase();
+
+  // Riddle answer pending
+  if (pendingRiddle) {
+    const riddle = pendingRiddle;
+    pendingRiddle = null;
+    showTyping();
+    await new Promise(r => setTimeout(r, 1200));
+    removeTyping();
+    await addMessage('nova', riddle.a + " Want another riddle, or shall we get back to some math?");
+    isTyping = false;
+    document.getElementById('send-btn').style.opacity = '1';
+    return;
+  }
+
+  let localResponse = null;
+
+  if (matchesAny(lower, GOODBYES)) {
+    localResponse = "Aww, bye! It was SO great working through math with you today! Come back anytime - you've got this! 💪✨";
+  } else if (matchesAny(lower, THANKS)) {
+    const r = [
+      "You're so welcome! That's what I'm here for! 🥰",
+      "Of course! Helping you figure it out yourself - that's the best feeling! 😊",
+      "Anytime! You did the hard work though - I just asked the right questions! 🌟",
+      "Happy to help! Keep that same energy on your next problem! 💜"
+    ];
+    localResponse = r[Math.floor(Math.random() * r.length)];
+  } else if (lower.includes("joke") || lower.includes("make me laugh") || lower.includes("funny")) {
+    localResponse = "Okay okay, brace yourself 😄<br><br><em>" + getRandomJoke() + "</em><br><br>Hehe! Alright, ready to get back to math? What problem are we working on?";
+  } else if (lower.includes("riddle")) {
+    const riddle = getRandomRiddle();
+    pendingRiddle = riddle;
+    localResponse = "Ooh riddle time! 🧩<br><br><strong>" + riddle.q + "</strong><br><br>Type your answer whenever you're ready!";
+  } else if (matchesAny(lower, GREETINGS) && lower.length < 20) {
+    const intros = [
+      "Hey hey! 👋 I'm Nova, your math tutor! I guide you step by step - even through scientific notation, trig, calculus, and more! What problem are we tackling? 🚀",
+      "Oh hiiii! 🌟 I'm Nova! Tell me your math problem - I understand everything from basic arithmetic all the way to calculus and scientific symbols! Let's go!",
+      "Hey there! 👋 Nova here! I can read scientific notation, Greek letters, trig symbols, and more. Give me a problem and we'll solve it together! 🧠"
+    ];
+    localResponse = intros[Math.floor(Math.random() * intros.length)];
+  } else if (matchesAny(lower, OKWORDS) && lower.length < 15) {
+    const oks = [
+      "Nice! 😊 What math problem are we working on?",
+      "Great! Ready for the next step? 🙌",
+      "Awesome! 🌟 What's the next part of the problem?",
+      "Cool! 😄 You're getting it! What comes next?"
+    ];
+    localResponse = oks[Math.floor(Math.random() * oks.length)];
+  }
+
+  if (localResponse) {
+    showTyping();
+    await new Promise(r => setTimeout(r, getTypingDelay(localResponse)));
+    removeTyping();
+    await addMessage('nova', localResponse);
+  } else {
+    showTyping();
+    const reply = await getNovaChatResponse(text);
+    removeTyping();
+    const formatted = reply.replace(/\n/g, '<br>');
+    await addMessage('nova', formatted);
+  }
+
+  isTyping = false;
+  document.getElementById('send-btn').style.opacity = '1';
+}
+
+function sendQuick(text) {
+  document.getElementById('chat-input').value = text;
+  sendMessage();
+}
+
+document.getElementById('chat-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') sendMessage();
+});
+
+window.addEventListener('load', async () => {
+  await new Promise(r => setTimeout(r, 600));
+  showTyping();
+  await new Promise(r => setTimeout(r, 1500));
+  removeTyping();
+  await addMessage('nova', "Hey there! 🌟 I'm <strong>Nova</strong>, your math tutor for grades 6–12! 💜 I now understand scientific notation, Greek symbols (π, θ, Σ...), calculus signs (∫, d/dx), trig, sets, and more!");
+  showTyping();
+  await new Promise(r => setTimeout(r, 1600));
+  removeTyping();
+  await addMessage('nova', "Use the <strong>🔬 symbol keyboard</strong> below to insert math signs — or just type them! I'll guide you through every step. What problem are we working on today? 🧠✨");
+});
+</script>
+</body>
+</html>
