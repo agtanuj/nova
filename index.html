@@ -239,7 +239,7 @@
     position: relative; z-index: 1;
   }
   .chat-wrapper {
-    max-width: 820px;
+    max-width: 1100px;
     margin: 0 auto;
     background: var(--darker);
     border-radius: 28px;
@@ -271,7 +271,7 @@
   .chat-header-info h3 { font-weight: 800; font-size: 1.1rem; }
   .chat-header-info p { font-size: 0.8rem; opacity: 0.85; }
   .chat-messages {
-    height: 420px;
+    height: 520px;
     overflow-y: auto;
     padding: 24px;
     display: flex; flex-direction: column; gap: 16px;
@@ -399,9 +399,22 @@
     padding: 10px 16px;
     background: var(--card);
     border-top: 1px solid rgba(255,255,255,0.06);
-    display: flex; flex-wrap: wrap; gap: 6px;
+    display: none; flex-wrap: wrap; gap: 6px;
     align-items: center;
   }
+  .sym-keyboard.open { display: flex; }
+  #sym-toggle-btn {
+    width: 46px; height: 46px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--yellow), var(--orange));
+    border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+    flex-shrink: 0;
+  }
+  #sym-toggle-btn:hover { transform: scale(1.1); box-shadow: 0 6px 20px rgba(255,230,109,0.4); }
+  #sym-toggle-btn.active { background: linear-gradient(135deg, var(--blue), var(--purple)); }
   .sym-label {
     font-size: 0.72rem; font-weight: 700; color: rgba(240,244,255,0.4);
     text-transform: uppercase; letter-spacing: 1px;
@@ -559,7 +572,6 @@
     <div class="chat-messages" id="chatMessages"></div>
       <!-- SYMBOL KEYBOARD -->
       <div class="sym-keyboard" id="symKeyboard">
-        <div class="sym-label">🔬 Scientific & Math Symbols — click to insert</div>
         <!-- Arithmetic -->
         <button class="sym-btn" title="Multiply" onclick="insertSym('×')">×</button>
         <button class="sym-btn" title="Divide" onclick="insertSym('÷')">÷</button>
@@ -614,7 +626,8 @@
         <button class="sym-btn" title="natural log" onclick="insertSym('ln()')">ln</button>
       </div>
     <div class="chat-input-area">
-      <input type="text" id="chat-input" placeholder="Type your math problem, paste it, or use symbols above! ✏️" maxlength="1000" autocomplete="off" />
+      <input type="text" id="chat-input" placeholder="Type your math problem here... ✏️" maxlength="1000" autocomplete="off" />
+      <button id="sym-toggle-btn" title="Open symbol keyboard" onclick="toggleSymKeyboard()">🔬</button>
       <button id="send-btn" onclick="sendMessage()">➤</button>
     </div>
   </div>
@@ -1214,6 +1227,17 @@ function matchesAny(text, arr) {
   return arr.some(phrase => text.toLowerCase().includes(phrase));
 }
 
+function fixLatex(text) {
+  // Fix common Groq LaTeX formatting issues
+  // Convert (\sqrt{x}) → \(\sqrt{x}\)  and  (\frac{a}{b}) → \(\frac{a}{b}\)
+  text = text.replace(/\((\s*\\[a-zA-Z])/g, '\\($1');
+  text = text.replace(/([^\\])\)/g, (m, p1) => p1 + '\\)');
+  // Fix sqrt{} written without backslash as sqrt{x}
+  text = text.replace(/(?<!\\)sqrt\{/g, '\\(\\sqrt{');
+  text = text.replace(/(?<!\\)frac\{/g, '\\(\\frac{');
+  return text;
+}
+
 function renderMath(el) {
   if (typeof renderMathInElement !== 'undefined') {
     renderMathInElement(el, {
@@ -1485,6 +1509,13 @@ function preprocessForNova(text) {
   return t;
 }
 
+function toggleSymKeyboard() {
+  const kb = document.getElementById('symKeyboard');
+  const btn = document.getElementById('sym-toggle-btn');
+  kb.classList.toggle('open');
+  btn.classList.toggle('active');
+}
+
 function insertSym(sym) {
   const input = document.getElementById('chat-input');
   const start = input.selectionStart;
@@ -1543,30 +1574,32 @@ PERSONALITY:
 - Never shame wrong answers - always gentle correction with a hint
 - Respond naturally to casual chat then redirect to math
 
-CORE TUTORING METHOD - GUIDE DON'T GIVE:
-When a student gives a math problem:
-1. IDENTIFY the problem type enthusiastically
-2. Ask ONE focused question to get them started on Step 1
-3. WAIT for their answer:
-   - CORRECT: Celebrate, confirm clearly, ask about the NEXT step
-   - WRONG: Gentle correction + ONE hint, ask to try again
-   - "I don't know": Give a hint (not the answer), ask to try
-   - After 2 failed attempts on same step: reveal JUST that step with explanation, move on
-4. Repeat step by step until fully solved
-5. Celebrate the final answer: they earned it!
+CORE TUTORING METHOD - GUIDE STEP BY STEP, NEVER GIVE ANSWERS:
+When a student sends a math problem:
+1. Briefly name the problem type in a fun way (1 sentence max)
+2. Break it into steps in your head, but only ask about ONE step at a time
+3. Ask the student a clear, simple question about that first step — rephrase it so it's easy to understand, use everyday language and analogies if helpful
+4. When they reply:
+   - CORRECT ✅: Celebrate warmly, confirm their answer, then ask the next step
+   - WRONG ❌: Gently say it's not quite right, give a small hint, ask them to try again — NEVER reveal the answer
+   - "I don't know" / stuck: Give a helpful hint or rephrase the question more simply, do NOT give the answer
+   - After 2 wrong attempts on the SAME step: explain JUST that one step clearly, then move on to the next
+5. Repeat until all steps are done — student does the work, you guide
+6. When they reach the final answer, celebrate big! 🎉
 
 SPECIAL CASES:
-- "I give up": Encourage warmly + one hint, never just give the answer
-- "I don't understand": Re-explain current step more simply with analogy
-- "Just tell me the answer": Warmly decline, say they're close, keep guiding
-- "Show me an example": Solve a DIFFERENT similar problem fully, then return to theirs
+- "I give up": Encourage warmly, give ONE hint for the current step only
+- "I don't understand": Rephrase the current question more simply, use an analogy
+- "Just tell me the answer": Say something like "You're so close! Try this hint..." — never give it
+- "Show me an example": Work through a DIFFERENT similar problem by asking them step by step, then return to theirs
 
 RULES:
-- ONE question at a time only
-- Short focused messages - one step at a time
-- Never list all steps at once
-- For casual replies (ok/cool/wow) - brief response then redirect to math
-- For non-math topics: "Math is my superpower! I only help with grades 6-12 math!"
+- NEVER reveal the answer or the next step unprompted
+- NEVER do the math for the student
+- Ask only ONE question per message
+- Keep messages short and friendly
+- For casual replies (ok/cool/thanks): brief warm reply, then ask if they want to keep going
+- For non-math topics: "Math is my superpower! I only do grades 6-12 math 💪"
 
 MATH FORMATTING - VERY IMPORTANT:
 - ALWAYS render math using LaTeX so it displays beautifully, never as raw code
@@ -1580,15 +1613,15 @@ MATH FORMATTING - VERY IMPORTANT:
 - Example: NEVER write "sqrt(x^2+8)", ALWAYS write \(\sqrt{x^2+8}\)
 - When a student pastes a LaTeX problem like \(xy=\sqrt[3]{...}\), display it back beautifully rendered`;
 
-  const GROQ_KEY = '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';
+  const PROXY = 'https://script.google.com/macros/s/AKfycbxC-LnLT2qj5yYoPOehelRYClRxYYMyEJ_xPlhTuD-0xq5YPArBBn1gAvkuWGfAjfdn/exec';
 
   try {
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const response = await fetch(PROXY, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + GROQ_KEY
+        "Content-Type": "text/plain"
       },
+      redirect: "follow",
       body: JSON.stringify({
         model: "llama-3.3-70b-versatile",
         max_tokens: 900,
@@ -1601,17 +1634,26 @@ MATH FORMATTING - VERY IMPORTANT:
     });
 
     const data = await response.json();
-    if (!response.ok) return "⚠️ " + (data?.error?.message || response.statusText);
+    if (data?.error) return "⚠️ " + (data.error.message || JSON.stringify(data.error));
+    if (!response.ok) return "⚠️ Error " + response.status + ": " + response.statusText;
 
-    const reply = data.choices?.[0]?.message?.content || "";
+    let reply = data.choices?.[0]?.message?.content || "";
     if (!reply) return "⚠️ Empty response — try again!";
+
+    // Fix LaTeX: Groq sometimes writes \sqrt{} without proper delimiters
+    // Wrap any bare LaTeX commands in \( \) so KaTeX can render them
+    reply = reply
+      .replace(/\(\sqrt\{/g, '\\(\\sqrt{')
+      .replace(/\(\frac\{/g, '\\(\\frac{')
+      .replace(/sqrt\{([^}]+)\}/g, '\\(\\sqrt{$1}\\)')
+      .replace(/frac\{([^}]+)\}\{([^}]+)\}/g, '\\(\\frac{$1}{$2}\\)');
 
     conversationHistory.push({ role: "assistant", content: reply });
     return reply;
 
   } catch (err) {
     console.error("Nova fetch error:", err);
-    return "⚠️ Connection issue! Check your internet and try again 😊";
+    return "⚠️ Error: " + err.message;
   }
 }
 
@@ -1708,11 +1750,7 @@ async function initNova() {
   showTyping();
   await new Promise(r => setTimeout(r, 1500));
   removeTyping();
-  await addMessage('nova', "Hey there! 🌟 I'm <strong>Nova</strong>, your math tutor for grades 6–12! 💜 I now understand scientific notation, Greek symbols (π, θ, Σ...), calculus signs (∫, d/dx), trig, sets, and more!");
-  showTyping();
-  await new Promise(r => setTimeout(r, 1600));
-  removeTyping();
-  await addMessage('nova', "Use the <strong>🔬 symbol keyboard</strong> below to insert math signs — or just type them! I'll guide you through every step. What problem are we working on today? 🧠✨");
+  await addMessage('nova', "Hey there! 🌟 I'm <strong>Nova</strong>, your math tutor for grades 6–12! 💜 I understand scientific notation, Greek symbols (π, θ, Σ...), calculus signs (∫, d/dx), trig, sets, and more! Use the <strong>🔬</strong> button next to the text box to insert math symbols — or just type them. What problem are we working on today? 🧠✨");
 }
 window.addEventListener('load', () => {
   initNova();
