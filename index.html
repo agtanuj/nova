@@ -1596,37 +1596,26 @@ MATH FORMATTING - VERY IMPORTANT:
   ];
 
   for (let i = 0; i < urls.length; i++) {
-    try {
-      const isProxy = i === 0;
-      const headers = isProxy
-        ? { "Content-Type": "application/json" }
-        : {
-            "Content-Type": "application/json",
-            "x-api-key": "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",
-            "anthropic-version": "2023-06-01",
-            "anthropic-dangerous-request-check": "true"
-          };
+  const PROXY = 'https://script.google.com/macros/s/AKfycbxC-LnLT2qj5yYoPOehelRYClRxYYMyEJ_xPlhTuD-0xq5YPArBBn1gAvkuWGfAjfdn/exec';
 
-      const response = await fetch(urls[i], {
-        method: "POST",
-        headers: headers,
-        body: payload
-      });
-
-      const data = await response.json();
-
-      if (response.status === 429) return "⏳ Too many messages! Wait a moment and try again 😊";
-      if (!response.ok) { console.warn("Proxy " + i + " failed:", response.status); continue; }
-      if (!data.content) { console.warn("No content in response", data); continue; }
-
-      const reply = data.content.map(b => b.text || "").join("\n").trim();
-      conversationHistory.push({ role: "assistant", content: reply });
-      return reply;
-
-    } catch (err) {
-      console.warn("URL " + i + " failed:", err.message);
-      continue;
-    }
+  try {
+    const res = await fetch(PROXY, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 900,
+        system: systemPrompt,
+        messages: conversationHistory
+      })
+    });
+    const data = await res.json();
+    const reply = data.content.map(b => b.text || '').join('\n').trim();
+    conversationHistory.push({ role: 'assistant', content: reply });
+    return reply;
+  } catch (err) {
+    return 'Hmm, something went wrong! Try sending your message again 😊';
+  }
   }
 
   return "⚠️ Nova couldn't connect right now. Please try again in a moment!";
