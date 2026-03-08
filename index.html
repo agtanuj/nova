@@ -1574,13 +1574,7 @@ MATH FORMATTING - VERY IMPORTANT:
 - Example: NEVER write "sqrt(x^2+8)", ALWAYS write \(\sqrt{x^2+8}\)
 - When a student pastes a LaTeX problem like \(xy=\sqrt[3]{...}\), display it back beautifully rendered`;
 
-  // ── PROXY URL ── paste your Google Apps Script URL below ──────────────────
   const PROXY_URL = 'https://script.google.com/macros/s/AKfycbxC-LnLT2qj5yYoPOehelRYClRxYYMyEJ_xPlhTuD-0xq5YPArBBn1gAvkuWGfAjfdn/exec';
-  // ────────────────────────────────────────────────────────────────────────────
-
-  if (PROXY_URL === 'PASTE_YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
-    return "Hi! Nova isn't connected yet. Please follow the setup steps to add your Google Apps Script URL! 😊";
-  }
 
   const payload = JSON.stringify({
     model: "claude-sonnet-4-20250514",
@@ -1589,47 +1583,31 @@ MATH FORMATTING - VERY IMPORTANT:
     messages: conversationHistory
   });
 
-  // Try Google Apps Script proxy first, then fallback proxies
-  const urls = [
-    PROXY_URL,
-    "https://corsproxy.io/?" + encodeURIComponent("https://api.anthropic.com/v1/messages"),
-  ];
+  try {
+    // Google Apps Script requires text/plain to avoid CORS preflight
+    const response = await fetch(PROXY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: payload,
+      redirect: "follow"
+    });
 
-  for (let i = 0; i < urls.length; i++) {
-    try {
-      const isProxy = i === 0;
-      const headers = isProxy
-        ? { "Content-Type": "application/json" }
-        : {
-            "Content-Type": "application/json",
-            "x-api-key": "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",
-            "anthropic-version": "2023-06-01",
-            "anthropic-dangerous-request-check": "true"
-          };
+    const text = await response.text();
+    let data;
+    try { data = JSON.parse(text); }
+    catch(e) { console.error("Bad JSON from proxy:", text); return "⚠️ Proxy returned unexpected data. Try again!"; }
 
-      const response = await fetch(urls[i], {
-        method: "POST",
-        headers: headers,
-        body: payload
-      });
+    if (data.error) return "⚠️ Error: " + (data.error.message || JSON.stringify(data.error));
+    if (!data.content) { console.error("No content:", data); return "⚠️ Empty response. Try again!"; }
 
-      const data = await response.json();
+    const reply = data.content.map(b => b.text || "").join("\n").trim();
+    conversationHistory.push({ role: "assistant", content: reply });
+    return reply;
 
-      if (response.status === 429) return "⏳ Too many messages! Wait a moment and try again 😊";
-      if (!response.ok) { console.warn("Proxy " + i + " failed:", response.status); continue; }
-      if (!data.content) { console.warn("No content in response", data); continue; }
-
-      const reply = data.content.map(b => b.text || "").join("\n").trim();
-      conversationHistory.push({ role: "assistant", content: reply });
-      return reply;
-
-    } catch (err) {
-      console.warn("URL " + i + " failed:", err.message);
-      continue;
-    }
+  } catch (err) {
+    console.error("Nova fetch error:", err);
+    return "⚠️ Connection issue! Check your internet and try again 😊";
   }
-
-  return "⚠️ Nova couldn't connect right now. Please try again in a moment!";
 }
 
 async function sendMessage() {
