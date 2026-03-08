@@ -1510,6 +1510,12 @@ async function getNovaChatResponse(rawMessage) {
   const userMessage = preprocessForNova(rawMessage);
   conversationHistory.push({ role: "user", content: userMessage });
 
+  // Build Gemini-format contents from full history
+  const geminiContents = conversationHistory.map(msg => ({
+    role: msg.role === "assistant" ? "model" : "user",
+    parts: [{ text: msg.content }]
+  }));
+
   const systemPrompt = `You are Nova, a warm, patient, encouraging math tutor for students in grades 6-12. You guide students step by step - you don't just give answers.
 
 SCIENTIFIC & MATH NOTATION YOU MUST UNDERSTAND:
@@ -1574,33 +1580,31 @@ MATH FORMATTING - VERY IMPORTANT:
 - Example: NEVER write "sqrt(x^2+8)", ALWAYS write \(\sqrt{x^2+8}\)
 - When a student pastes a LaTeX problem like \(xy=\sqrt[3]{...}\), display it back beautifully rendered`;
 
-  const PROXY_URL = 'https://script.google.com/macros/s/AKfycbxC-LnLT2qj5yYoPOehelRYClRxYYMyEJ_xPlhTuD-0xq5YPArBBn1gAvkuWGfAjfdn/exec';
-
-  const payload = JSON.stringify({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: 900,
-    system: systemPrompt,
-    messages: conversationHistory
-  });
+  const GEMINI_KEY = 'AIzaSyDjijbLtu31lTcpvXFdHdNgHnAbwPlbOK0';
+  const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + GEMINI_KEY;
 
   try {
-    // Google Apps Script requires text/plain to avoid CORS preflight
-    const response = await fetch(PROXY_URL, {
+    const response = await fetch(GEMINI_URL, {
       method: "POST",
-      headers: { "Content-Type": "text/plain" },
-      body: payload,
-      redirect: "follow"
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        system_instruction: { parts: [{ text: systemPrompt }] },
+        contents: geminiContents,
+        generationConfig: { maxOutputTokens: 900, temperature: 0.7 }
+      })
     });
 
-    const text = await response.text();
-    let data;
-    try { data = JSON.parse(text); }
-    catch(e) { console.error("Bad JSON from proxy:", text); return "⚠️ Proxy returned unexpected data. Try again!"; }
+    const data = await response.json();
 
-    if (data.error) return "⚠️ Error: " + (data.error.message || JSON.stringify(data.error));
-    if (!data.content) { console.error("No content:", data); return "⚠️ Empty response. Try again!"; }
+    if (!response.ok) {
+      const msg = data?.error?.message || response.statusText;
+      console.error("Gemini error:", msg);
+      return "⚠️ " + msg;
+    }
 
-    const reply = data.content.map(b => b.text || "").join("\n").trim();
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    if (!reply) return "⚠️ Empty response — try again!";
+
     conversationHistory.push({ role: "assistant", content: reply });
     return reply;
 
